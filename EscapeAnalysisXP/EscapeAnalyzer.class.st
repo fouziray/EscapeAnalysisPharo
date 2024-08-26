@@ -22,6 +22,22 @@ EscapeAnalyzer >> analyze: method [
 	workList isNotEmpty whileTrue: [ self analyzeNext: next ]
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> analyzeNext: aMethod [
+
+	aMethod ast body children do: [ :child |
+		child isMessage ifTrue: [
+			(self doesMessageRefersToTrackedVariables: child) ifTrue: [
+				workList addAll: child selector implementors ] ].
+		child isReturn ifTrue: [
+			(self isTheReturnReturningTrackedVariable: child) ifTrue: [
+				self markVariableAsEscaped: child ] ].
+		child isAssignment ifTrue: [
+			(self isAssignmentTrackedVariable: child ) ifTrue: [
+				self markVariableAsEscaped: child ]
+			 ] ]
+]
+
 { #category : 'accessing' }
 EscapeAnalyzer >> foo: point2 [ 
 
