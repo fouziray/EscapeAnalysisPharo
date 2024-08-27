@@ -27,7 +27,7 @@ EscapeAnalyzer >> analyze: method [
 		andValues: (Array new: tempVariables size withAll: false)).
 		
 	method ast body allChildren do: [ :node | node treatNode: self ].
-	
+
 	workList add: method.
 	[ workList isNotEmpty ] whileTrue: [
 		next := workList removeFirst.
