@@ -13,41 +13,42 @@ Class {
 
 { #category : 'as yet unclassified' }
 LineInlined class >> p1: aPoint1 p2: aPoint2 [
-	|line|
-	line:= self new.
-	line x1: aPoint1 x.
-	line y1: aPoint1 y.
-	line y2: aPoint2 y.
-	line x2: aPoint2 x.
-^ line
+
+	| line |
+	line := self new.
+	line lineX1: aPoint1 pointX.
+	line lineY1: aPoint1 pointY.
+	line lineX2: aPoint2 pointX.
+	line lineY2: aPoint2 pointY.
+	^ line
 ]
 
 { #category : 'accessing' }
-LineInlined >> length [
+LineInlined >> lineLength [
 
 	^ ((x2 - x1 )squared + (y2 - y1 ) squared )sqrt
 ]
 
 { #category : 'as yet unclassified' }
-LineInlined >> x1: aNumber [
+LineInlined >> lineX1: aNumber [
 
 	x1 := aNumber
 ]
 
 { #category : 'accessing' }
-LineInlined >> x2: aNumber [
+LineInlined >> lineX2: aNumber [
 
 	x2 := aNumber
 ]
 
 { #category : 'accessing' }
-LineInlined >> y1: aNumber [
+LineInlined >> lineY1: aNumber [
 
 	y1 := aNumber
 ]
 
 { #category : 'accessing' }
-LineInlined >> y2: aNumber [
+LineInlined >> lineY2: aNumber [
 
 	y2 := aNumber
 ]
