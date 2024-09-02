@@ -28,7 +28,7 @@ EscapeAnalyzer >> analyze: method [
 		
 	method ast body allChildren do: [ :node | node treatNode: self ].
 
-	workList add: method.
+	"workList add: method."
 	[ workList isNotEmpty ] whileTrue: [
 		next := workList removeFirst.
 		self analyzeNext: next ]
@@ -37,16 +37,17 @@ EscapeAnalyzer >> analyze: method [
 { #category : 'as yet unclassified' }
 EscapeAnalyzer >> analyzeNext: aMethod [
 
-	aMethod ast body children do: [ :child |
+	"aMethod ast body children do: [ :child |
 		child isMessage ifTrue: [
 			(self doesMessageRefersToTrackedVariables: child) ifTrue: [
 				workList addAll: child selector implementors ] ].
 		child isReturn ifTrue: [
 			(self isTheReturnReturningTrackedVariable: child) ifTrue: [
-				"self markVariableAsEscaped: child" ] ].
+				""self markVariableAsEscaped: child"" ] ].
 		child isAssignment ifTrue: [
 			(self isAssignmentTrackedVariable: child) ifTrue: [
-				self markVariableAsEscaped: child variable ] ] ]
+				self markVariableAsEscaped: child variable ] ] ]"
+	aMethod ast body children do: [ :child | child treatNode: self ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -73,16 +74,8 @@ EscapeAnalyzer >> foo: point2 [
 	point1 pointX: 1.
 	point1 pointY: 12.
 	line := LineInlined p1: point1 p2: point2.
-	^ line lineLength
-]
-
-{ #category : 'testing' }
-EscapeAnalyzer >> isAssignmentTrackedVariable: childNode [
-
-	(variablesTable keys includes: childNode variable name)
-		ifFalse: [ ^ false ].
-	childNode value isLiteral ifTrue: [ ^ false ].
-	^ true
+	line lineLength.
+	^ line
 ]
 
 { #category : 'testing' }

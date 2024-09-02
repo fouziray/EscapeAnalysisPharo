@@ -12,21 +12,21 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-LineInlined class >> p1: aPoint1 p2: aPoint2 [
+LineInlined class >> p1: point1 p2: point2 [
 
 	| line |
 	line := self new.
-	line lineX1: aPoint1 pointX.
-	line lineY1: aPoint1 pointY.
-	line lineX2: aPoint2 pointX.
-	line lineY2: aPoint2 pointY.
+	line lineX1: point1 pointX.
+	line lineY1: point1 pointY.
+	line lineX2: point2 pointX.
+	line lineY2: point2 pointY.
 	^ line
 ]
 
 { #category : 'accessing' }
 LineInlined >> lineLength [
 
-	^ ((x2 - x1 )squared + (y2 - y1 ) squared )sqrt
+	^ ((x2 - x1) squared + (y2 - y1) squared) sqrt
 ]
 
 { #category : 'as yet unclassified' }
