@@ -14,13 +14,13 @@ Class {
 { #category : 'as yet unclassified' }
 LineInlined class >> p1: point1 p2: point2 [
 
-	| line |
-	line := self new.
-	line lineX1: point1 pointX.
-	line lineY1: point1 pointY.
-	line lineX2: point2 pointX.
-	line lineY2: point2 pointY.
-	^ line
+	| l |
+	l := self new.
+	l lineX1: point1 pointX.
+	l lineY1: point1 pointY.
+	l lineX2: point2 pointX.
+	l lineY2: point2 pointY.
+	^ l
 ]
 
 { #category : 'accessing' }

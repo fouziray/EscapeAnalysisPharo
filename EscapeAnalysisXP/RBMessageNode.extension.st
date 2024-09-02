@@ -3,13 +3,15 @@ Extension { #name : 'RBMessageNode' }
 { #category : '*EscapeAnalysisXP' }
 RBMessageNode >> treatNode: escapeAnalyzer [
 
-	self receiver isTempVariable ifTrue: [
-		(escapeAnalyzer isTrackedTempVariable: self receiver) ifTrue: [
-			escapeAnalyzer addMethodsToWorkList: self selector implementors ] ].
+	| nodesToTreat isRcvrOrArgTracked |
+	"Treat only the arguments that are variables and the receiver"
+	nodesToTreat := { self receiver } , self arguments.
+	isRcvrOrArgTracked := nodesToTreat anySatisfy: [ :e |
+		escapeAnalyzer isTrackedNode: e ].
+	isRcvrOrArgTracked ifTrue: [
+		escapeAnalyzer addMethodsToWorkList: self selector implementors ].
 
-	self isUnary ifTrue: [ ^ self ].
-
-	self arguments do: [ :arg |
-		(arg isLiteralNode not and: [ escapeAnalyzer isTrackedTempVariable: arg ]) ifTrue: [
-			escapeAnalyzer addMethodsToWorkList: self selector implementors ] ]
+	self arguments
+		select: [ :arg | arg isMessage ]
+		thenDo: [ :arg | arg treatNode: escapeAnalyzer ]
 ]

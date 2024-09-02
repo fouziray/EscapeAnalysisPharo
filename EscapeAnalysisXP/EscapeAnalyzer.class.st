@@ -25,28 +25,19 @@ EscapeAnalyzer >> analyze: method [
 	variablesTable := (Dictionary
 		newFromKeys: tempVariables
 		andValues: (Array new: tempVariables size withAll: false)).
-		
-	method ast body allChildren do: [ :node | node treatNode: self ].
+	
+	self populateWorkList: method.
+	1h.
 
 	"workList add: method."
 	[ workList isNotEmpty ] whileTrue: [
 		next := workList removeFirst.
-		self analyzeNext: next ]
+		self analyzeMethod: next ]
 ]
 
-{ #category : 'as yet unclassified' }
-EscapeAnalyzer >> analyzeNext: aMethod [
+{ #category : 'testing' }
+EscapeAnalyzer >> analyzeMethod: aMethod [
 
-	"aMethod ast body children do: [ :child |
-		child isMessage ifTrue: [
-			(self doesMessageRefersToTrackedVariables: child) ifTrue: [
-				workList addAll: child selector implementors ] ].
-		child isReturn ifTrue: [
-			(self isTheReturnReturningTrackedVariable: child) ifTrue: [
-				""self markVariableAsEscaped: child"" ] ].
-		child isAssignment ifTrue: [
-			(self isAssignmentTrackedVariable: child) ifTrue: [
-				self markVariableAsEscaped: child variable ] ] ]"
 	aMethod ast body children do: [ :child | child treatNode: self ]
 ]
 
@@ -66,18 +57,6 @@ EscapeAnalyzer >> doesMessageRefersToTrackedVariables: child [
 	^ false
 ]
 
-{ #category : 'accessing' }
-EscapeAnalyzer >> foo: point2 [
-
-	| point1 line |
-	point1 := PointInlined new.
-	point1 pointX: 1.
-	point1 pointY: 12.
-	line := LineInlined p1: point1 p2: point2.
-	line lineLength.
-	^ line
-]
-
 { #category : 'testing' }
 EscapeAnalyzer >> isTheReturnReturningTrackedVariable: aReturnNode [
 
@@ -85,6 +64,13 @@ EscapeAnalyzer >> isTheReturnReturningTrackedVariable: aReturnNode [
 		^ self doesMessageRefersToTrackedVariables: aReturnNode value ].
 	^ (variablesTable includes: aReturnNode value selector) ifTrue: [
 		  self markVariableAsEscaped: aReturnNode value  ]
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> isTrackedNode: anASTNode [
+
+	anASTNode isVariable ifFalse: [ ^ self ].
+	^ self isTrackedTempVariable: anASTNode
 ]
 
 { #category : 'as yet unclassified' }
@@ -99,6 +85,19 @@ EscapeAnalyzer >> isTrackedTempVariable: anVariableNode [
 EscapeAnalyzer >> markVariableAsEscaped: aVariableNode [
 
 	variablesTable at: aVariableNode name put: true
+]
+
+{ #category : 'testing' }
+EscapeAnalyzer >> populateWorkList: aMethod [
+
+	aMethod ast body allChildren
+		select: [ :node | node isMessage ]
+		thenDo: [ :node | node treatNode: self ]
+]
+
+{ #category : 'accessing' }
+EscapeAnalyzer >> variablesTable [
+	^ variablesTable
 ]
 
 { #category : 'accessing' }
