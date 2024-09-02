@@ -67,7 +67,7 @@ EscapeAnalyzer >> isTheReturnReturningTrackedVariable: aReturnNode [
 { #category : 'as yet unclassified' }
 EscapeAnalyzer >> isTrackedNode: anASTNode [
 
-	anASTNode isVariable ifFalse: [ ^ self ].
+	anASTNode isVariable ifFalse: [ ^ false ].
 	^ self isTrackedTempVariable: anASTNode
 ]
 

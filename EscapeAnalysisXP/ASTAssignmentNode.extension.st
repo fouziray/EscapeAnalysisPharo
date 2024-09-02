@@ -11,12 +11,12 @@ ASTAssignmentNode >> treatNode: escapeAnalyzer [
 		ifFalse: [ self value treatNode: escapeAnalyzer ]
 		ifTrue: [
 			self variable isClassVariable ifTrue: [
-				escapeAnalyzer markVariableAsEscaped: self variable.
+				escapeAnalyzer markVariableAsEscaped: self value.
 				^ self ].
 			self variable isInstanceVariable ifTrue: [
-				escapeAnalyzer markVariableAsEscaped: self variable.
+				escapeAnalyzer markVariableAsEscaped: self value.
 				^ self ].
 			self variable isGlobalVariable ifTrue: [
-				escapeAnalyzer markVariableAsEscaped: self variable.
+				escapeAnalyzer markVariableAsEscaped: self value.
 				^ self ] ]
 ]
