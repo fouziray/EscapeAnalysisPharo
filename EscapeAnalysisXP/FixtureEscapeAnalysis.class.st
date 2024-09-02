@@ -43,6 +43,17 @@ FixtureEscapeAnalysis >> foo: point2 [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> fooNotReturn: point2 [
+
+	| point1 line |
+	point1 := PointInlined new.
+	point1 pointX: 1.
+	point1 pointY: 12.
+	line := LineInlined p1: point1 p2: point2.
+	^ line lineLength
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> fooSetter: h [
 
 	FooGlobalVariable := h
