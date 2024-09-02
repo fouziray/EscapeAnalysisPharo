@@ -7,6 +7,16 @@ ASTAssignmentNode >> treatArgument: escapeAnalyzer [
 { #category : '*EscapeAnalysisXP' }
 ASTAssignmentNode >> treatNode: escapeAnalyzer [
 
-	self variable isTempVariable ifTrue: [ ^ self ].
-	self value treatNode: escapeAnalyzer
+	(escapeAnalyzer isTrackedNode: self value)
+		ifFalse: [ self value treatNode: escapeAnalyzer ]
+		ifTrue: [
+			self variable isClassVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self variable.
+				^ self ].
+			self variable isInstanceVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self variable.
+				^ self ].
+			self variable isGlobalVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self variable.
+				^ self ] ]
 ]

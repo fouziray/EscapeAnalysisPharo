@@ -19,19 +19,17 @@ EscapeAnalyzer >> addMethodsToWorkList: aMethodCollection [
 EscapeAnalyzer >> analyze: method [
 
 	| next tempVariables |
-	workList := OrderedCollection new.
-	
 	tempVariables := method ast body temporaryVariables.
 	variablesTable := (Dictionary
 		newFromKeys: tempVariables
 		andValues: (Array new: tempVariables size withAll: false)).
 	
-	self populateWorkList: method.
-	1h.
+	"self populateWorkList: method.
+	1h."
 
-	"workList add: method."
+	workList := OrderedCollection with: method.
 	[ workList isNotEmpty ] whileTrue: [
-		next := workList removeFirst.
+		next := workList removeLast.
 		self analyzeMethod: next ]
 ]
 
