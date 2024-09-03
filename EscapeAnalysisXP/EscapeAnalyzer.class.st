@@ -40,31 +40,6 @@ EscapeAnalyzer >> analyzeMethod: aMethod [
 ]
 
 { #category : 'as yet unclassified' }
-EscapeAnalyzer >> doesMessageRefersToTrackedVariables: child [
-
-	(variablesTable includes: child receiver name) ifTrue: [ ^ true ].
-
-	child arguments do: [ :arg |
-		arg isMessage
-			ifTrue: [ ^ self doesMessageRefersToTrackedVariables: arg ]
-			ifFalse: [
-				arg isVariable ifTrue: [
-					(variablesTable includes: arg name) ifTrue: [
-						self markVariableAsEscaped: arg name.
-						^ true ] ] ] ].
-	^ false
-]
-
-{ #category : 'testing' }
-EscapeAnalyzer >> isTheReturnReturningTrackedVariable: aReturnNode [
-
-	aReturnNode value isMessage ifTrue: [
-		^ self doesMessageRefersToTrackedVariables: aReturnNode value ].
-	^ (variablesTable includes: aReturnNode value selector) ifTrue: [
-		  self markVariableAsEscaped: aReturnNode value  ]
-]
-
-{ #category : 'as yet unclassified' }
 EscapeAnalyzer >> isTrackedNode: anASTNode [
 
 	anASTNode isVariable ifFalse: [ ^ false ].
