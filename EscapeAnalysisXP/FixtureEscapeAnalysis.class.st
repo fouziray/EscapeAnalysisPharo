@@ -2,7 +2,8 @@ Class {
 	#name : 'FixtureEscapeAnalysis',
 	#superclass : 'Object',
 	#instVars : [
-		'x'
+		'x',
+		'inst'
 	],
 	#category : 'EscapeAnalysisXP',
 	#package : 'EscapeAnalysisXP'
@@ -12,14 +13,6 @@ Class {
 FixtureEscapeAnalysis class >> initialize [
 
 	Smalltalk globals at: #FooGlobalVariable put: nil
-]
-
-{ #category : 'accessing' }
-FixtureEscapeAnalysis >> foo2 [
-
-	| h |
-	h := nil.
-	self fooSetter: h
 ]
 
 { #category : 'accessing' }
@@ -54,9 +47,46 @@ FixtureEscapeAnalysis >> fooNotReturn: point2 [
 ]
 
 { #category : 'accessing' }
-FixtureEscapeAnalysis >> fooSetter: h [
+FixtureEscapeAnalysis >> fooSetToGlobal [
+
+	| h |
+	h := nil.
+	self fooSetterToGlobal: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetToInstance [
+
+	| h |
+	h := nil.
+	self fooSetterToInstance: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetToTemp [
+
+	| h |
+	h := nil.
+	self fooSetterToTemp: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetterToGlobal: h [
 
 	FooGlobalVariable := h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetterToInstance: h [
+
+	inst := h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetterToTemp: h [
+
+	| aTemp |
+	aTemp := h
 ]
 
 { #category : 'tests' }

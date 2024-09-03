@@ -29,8 +29,24 @@ EscapeAnalysisTest >> testReturnedTempVarEscaped [
 EscapeAnalysisTest >> testTempVarAssignedToGlobalEscaped [
 
 	escapeAnalyzer := EscapeAnalyzer new.
-	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #foo2.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToGlobal.
 	self assert: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testTempVarAssignedToInstEscaped [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToInstance.
+	self assert: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testTempVarAssignedToTempNotEscaped [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToTemp.
+	self deny: (escapeAnalyzer variablesTable at: #h)
 ]
 
 { #category : 'tests' }
