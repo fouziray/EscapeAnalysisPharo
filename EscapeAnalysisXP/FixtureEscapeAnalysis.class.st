@@ -97,6 +97,14 @@ FixtureEscapeAnalysis >> method [
 	^ self returnA: a
 ]
 
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> notUsedBlockReturnsTemp [
+
+	| h tempo|
+	h := [ ^ tempo ].
+	^ self toto: h
+]
+
 { #category : 'tests' }
 FixtureEscapeAnalysis >> returnA: a [
 

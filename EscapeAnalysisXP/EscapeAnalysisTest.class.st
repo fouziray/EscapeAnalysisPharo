@@ -26,6 +26,15 @@ EscapeAnalysisTest >> testReturnedTempVarEscaped [
 ]
 
 { #category : 'tests' }
+EscapeAnalysisTest >> testTempEscapedBlockAsArgToMessage [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #notUsedBlockReturnsTemp.
+	self deny: (escapeAnalyzer variablesTable at: #tempo).
+	
+]
+
+{ #category : 'tests' }
 EscapeAnalysisTest >> testTempVarAssignedToGlobalEscaped [
 
 	escapeAnalyzer := EscapeAnalyzer new.
