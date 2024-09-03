@@ -20,12 +20,9 @@ EscapeAnalyzer >> analyze: method [
 
 	| next tempVariables |
 	tempVariables := method ast body temporaryVariables.
-	variablesTable := (Dictionary
+	variablesTable := Dictionary
 		newFromKeys: tempVariables
-		andValues: (Array new: tempVariables size withAll: false)).
-	
-	"self populateWorkList: method.
-	1h."
+		andValues: (Array new: tempVariables size withAll: false).
 
 	workList := OrderedCollection with: method.
 	[ workList isNotEmpty ] whileTrue: [
