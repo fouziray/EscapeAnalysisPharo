@@ -105,10 +105,33 @@ FixtureEscapeAnalysis >> notUsedBlockReturnsTemp [
 	^ self toto: h
 ]
 
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> notUsedBlockTemp [
+
+	| h tempo |
+	h := [ tempo ].
+	^ self toto: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> objectEscaped [
+
+	| xx y |
+	xx := Object new.
+	y := xx -> nil.
+	^ self tata: y
+]
+
 { #category : 'tests' }
 FixtureEscapeAnalysis >> returnA: a [
 
 	^ a
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> tata: y [
+
+	^ y
 ]
 
 { #category : 'accessing' }
