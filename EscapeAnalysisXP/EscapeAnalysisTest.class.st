@@ -17,21 +17,21 @@ EscapeAnalysisTest >> testMethod [
 ]
 
 { #category : 'tests' }
+EscapeAnalysisTest >> testReturnTempInBlock [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #notUsedBlockReturnsTemp.
+	self deny: (escapeAnalyzer variablesTable at: #tempo).
+	
+]
+
+{ #category : 'tests' }
 EscapeAnalysisTest >> testReturnedTempVarEscaped [
 
 	escapeAnalyzer := EscapeAnalyzer new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #foo:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self assert: (escapeAnalyzer variablesTable at: #line)
-]
-
-{ #category : 'tests' }
-EscapeAnalysisTest >> testTempEscapedBlockAsArgToMessage [
-
-	escapeAnalyzer := EscapeAnalyzer new.
-	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #notUsedBlockReturnsTemp.
-	self deny: (escapeAnalyzer variablesTable at: #tempo).
-	
 ]
 
 { #category : 'tests' }
