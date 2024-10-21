@@ -16,3 +16,20 @@ ASTAssignmentNode >> treatNode: escapeAnalyzer [
 				escapeAnalyzer markVariableAsEscaped: self value.
 				^ self ] ]
 ]
+
+{ #category : '*EscapeAnalysisXP' }
+ASTAssignmentNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
+
+	(escapeAnalyzer checkNode: self value trackedIn: trackedVariablesTable )
+		ifFalse: [ self value treatNode: escapeAnalyzer given: trackedVariablesTable ]
+		ifTrue: [
+			self variable isClassVariable ifTrue: [
+				escapeAnalyzer markEscaped: self value name inTable: trackedVariablesTable .
+				^ self ].
+			self variable isInstanceVariable ifTrue: [
+				escapeAnalyzer markEscaped: self value name inTable: trackedVariablesTable.
+				^ self ].
+			self variable isGlobalVariable ifTrue: [
+				escapeAnalyzer markEscaped: self value name inTable: trackedVariablesTable.
+				^ self ] ]
+]

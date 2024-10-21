@@ -16,6 +16,22 @@ FixtureEscapeAnalysis class >> initialize [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> callMethodWithDifferentArgName [
+
+	| h |
+	h := nil.
+	^ self totoWithDifferentArgName: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> callMethodWithDifferentArgNameTwoLevelIndirection [
+
+	| h |
+	h := nil.
+	^ self totoWithDifferentArgNameTwoLevelIndirection: h
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> foo3 [
 
 	| h |
@@ -86,7 +102,9 @@ FixtureEscapeAnalysis >> fooSetterToInstance: h [
 FixtureEscapeAnalysis >> fooSetterToTemp: h [
 
 	| aTemp |
-	aTemp := h
+	aTemp := h.
+
+	^ aTemp
 ]
 
 { #category : 'tests' }
@@ -128,6 +146,12 @@ FixtureEscapeAnalysis >> returnA: a [
 	^ a
 ]
 
+{ #category : 'tests' }
+FixtureEscapeAnalysis >> returnBlockValue: aBlock [
+
+	^ aBlock value
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> tata: y [
 
@@ -138,4 +162,25 @@ FixtureEscapeAnalysis >> tata: y [
 FixtureEscapeAnalysis >> toto: h [
 
 	^ 5 + 5
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> totoWithDifferentArgName: aUniqueName [
+	
+	^ aUniqueName
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirection: aName [
+
+	^ self totoWithDifferentArgName: aName
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> usedBlockReturnsTemp [
+
+	| h tempo|
+	tempo := Object new.
+	h := [ ^ tempo ]. "non local return"
+	^ self returnBlockValue: h
 ]

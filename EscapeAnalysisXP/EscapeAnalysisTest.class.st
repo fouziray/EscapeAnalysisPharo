@@ -16,6 +16,23 @@ EscapeAnalysisTest >> setUp [
 ]
 
 { #category : 'tests' }
+EscapeAnalysisTest >> test2ReturnedTempVarEscapedWithDifferentArgName [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
+	self assert: (escapeAnalyzer variablesTable at: #h).
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testArgBlockReturnsTemp [
+ 
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
+	self assert: (escapeAnalyzer variablesTable at: #tempo).
+	
+]
+
+{ #category : 'tests' }
 EscapeAnalysisTest >> testMethod [
 
 	escapeAnalyzer := EscapeAnalyzer new.
@@ -44,6 +61,22 @@ EscapeAnalysisTest >> testReturnedTempVarEscaped [
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #foo:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self assert: (escapeAnalyzer variablesTable at: #line)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testReturnedTempVarEscapedWithDifferentArgName [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
+	self assert: (escapeAnalyzer variablesTable at: #h).
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testReturnedTempVarEscapedWithDifferentArgNameTwoLevelIndirection [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgNameTwoLevelIndirection.
+	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
 
 { #category : 'tests' }
@@ -91,4 +124,10 @@ EscapeAnalysisTest >> testTempVarsNotEscaped [
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooNotReturn:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self deny: (escapeAnalyzer variablesTable at: #line)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisTest >> testUpperMostDeclarationName [
+
+
 ]
