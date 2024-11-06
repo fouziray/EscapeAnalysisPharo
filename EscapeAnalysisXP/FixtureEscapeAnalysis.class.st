@@ -24,11 +24,38 @@ FixtureEscapeAnalysis >> callMethodWithDifferentArgName [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> callMethodWithDifferentArgNameDoesntReturn [
+
+	| h |
+	h := nil.
+	self totoWithDifferentArgName: h
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> callMethodWithDifferentArgNameTwoLevelIndirection [
 
 	| h |
 	h := nil.
 	^ self totoWithDifferentArgNameTwoLevelIndirection: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> callToObjectToInlineMethodEscapes [
+
+	| h |
+	"how can i escape and not escape without there being a message send "
+	
+	h := ObjectToBeInlined new.
+	h aMethodThatPassReceiverToAnotherObject.
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> callTwiceReturnOneDifferentVars [
+
+	| p |
+	p := Point new.
+	self returnA: 5.
+	^ self returnA: p " the second one which is supposed to mark the p variable as escaped is being ignored"
 ]
 
 { #category : 'accessing' }
@@ -52,6 +79,14 @@ FixtureEscapeAnalysis >> foo: point2 [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> fooDoesNotScape [
+
+	| point1 |
+	point1 := PointInlined new.
+	^ point1 pointX
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> fooNotReturn: point2 [
 
 	| point1 line |
@@ -71,11 +106,26 @@ FixtureEscapeAnalysis >> fooSetToGlobal [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetToGlobalInScope [
+	| h |
+	h := nil.
+FooGlobalVariable := h.
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> fooSetToInstance [
 
 	| h |
 	h := nil.
 	self fooSetterToInstance: h
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooSetToInstanceInScope [
+
+	| h |
+	h := nil.
+	inst := h
 ]
 
 { #category : 'accessing' }
@@ -115,6 +165,37 @@ FixtureEscapeAnalysis >> method [
 	^ self returnA: a
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> methodWithReturn: argName [
+
+	^ argName. 
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> methodWithReturnSelf [
+
+	^ self. 
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> noReturnArgumentMessage [
+
+	| p |
+	"p:= Point new."
+	p := FixtureEscapeAnalysis new.
+	self methodWithReturn: p.
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> noReturnArgumentMessageSuccededWithReturnSelf [
+
+	| p |
+	"p:= Point new."
+	p := FixtureEscapeAnalysis new.
+	self methodWithReturn: p.
+	^ self
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> notUsedBlockReturnsTemp [
 
@@ -140,6 +221,13 @@ FixtureEscapeAnalysis >> objectEscaped [
 	^ self tata: y
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> recursiveFunction [
+	| temp |
+	temp:= FixtureEscapeAnalysis .
+	temp recursiveFunction.
+]
+
 { #category : 'tests' }
 FixtureEscapeAnalysis >> returnA: a [
 
@@ -150,6 +238,15 @@ FixtureEscapeAnalysis >> returnA: a [
 FixtureEscapeAnalysis >> returnBlockValue: aBlock [
 
 	^ aBlock value
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> returnReceiverMessageCallOnSelf [
+
+	| p |
+	"p:= Point new."
+	p := FixtureEscapeAnalysis new.
+	^ p methodWithReturnSelf
 ]
 
 { #category : 'accessing' }

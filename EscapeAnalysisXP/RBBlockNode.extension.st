@@ -3,7 +3,7 @@ Extension { #name : 'RBBlockNode' }
 { #category : '*EscapeAnalysisXP' }
 RBBlockNode >> blockNameTracksVarNamed: aVariableName [
 
-	^ self name , aVariableName
+	^ self asString , aVariableName
 ]
 
 { #category : '*EscapeAnalysisXP' }
@@ -21,7 +21,8 @@ RBBlockNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 then whenever a variable is escaped this must bubble up until the returned variable in the block node
 	"
 
-	| catchReturnedVariableName |
+	| catchReturnedVariableName returnValue |
+	returnValue := 'self'.
 	self body children do: [ :child |
 		child isReturn
 			ifTrue: [
@@ -32,7 +33,13 @@ then whenever a variable is escaped this must bubble up until the returned varia
 				catchReturnedVariableName ifNotNil: [
 					trackedVariablesTable
 						at: (self blockNameTracksVarNamed: catchReturnedVariableName)
-						put: catchReturnedVariableName ] ]
+						put: catchReturnedVariableName.
+					returnValue := catchReturnedVariableName ] ]
 			ifFalse: [
-			child treatNode: escapeAnalyzer given: trackedVariablesTable ] ]
+				returnValue := child
+					               treatNode: escapeAnalyzer
+					               given: trackedVariablesTable.
+				child isVariable ifFalse: [ returnValue := 'self' ] ] ].
+
+	^ returnValue
 ]

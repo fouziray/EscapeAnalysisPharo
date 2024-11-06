@@ -1,6 +1,24 @@
 Extension { #name : 'RBMessageNode' }
 
 { #category : '*EscapeAnalysisXP' }
+RBMessageNode >> treatNode2: escapeAnalyzer given: trackedVariablesTable [
+
+	| nodesToTreat isRcvrOrArgTracked |
+	"Treat only the arguments that are variables and the receiver"
+	nodesToTreat := { self receiver } , self arguments.
+	isRcvrOrArgTracked := false.
+	nodesToTreat do: [ :e |
+		(escapeAnalyzer checkNode: e trackedIn: trackedVariablesTable)
+			ifTrue: [
+			escapeAnalyzer addMethodsToWorkList: self selector implementors ] ].
+
+
+
+
+	self children do: [ :node | node treatNode: escapeAnalyzer ]
+]
+
+{ #category : '*EscapeAnalysisXP' }
 RBMessageNode >> treatNode: escapeAnalyzer [
 
 	| nodesToTreat isRcvrOrArgTracked |

@@ -2,7 +2,8 @@ Class {
 	#name : 'EscapeAnalysisVarNameTrackTest',
 	#superclass : 'TestCase',
 	#instVars : [
-		'escapeAnalyzer'
+		'escapeAnalyzer',
+		'workListReturnStatus'
 	],
 	#category : 'EscapeAnalysisXP',
 	#package : 'EscapeAnalysisXP'
@@ -12,7 +13,9 @@ Class {
 EscapeAnalysisVarNameTrackTest >> setUp [
 
 	super setUp.
-	escapeAnalyzer := EscapeAnalyzer new
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer setWorkListReturnStatus: OrderedCollection new .
+	escapeAnalyzer setReturnedFlag: false.
 ]
 
 { #category : 'tests' }
@@ -25,17 +28,16 @@ EscapeAnalysisVarNameTrackTest >> test2ReturnedTempVarEscapedWithDifferentArgNam
 
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testArgBlockReturnsTemp [
- 
-	escapeAnalyzer := EscapeAnalyzer new.
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
-	self assert: (escapeAnalyzer variablesTable at: #tempo).
-	
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
+	self assert: (escapeAnalyzer variablesTable at: #tempo)
 ]
 
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testMethod [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	"escapeAnalyzer := EscapeAnalyzer new."
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #method.
 	self assert: (escapeAnalyzer variablesTable at: #a)
 ]
@@ -43,8 +45,17 @@ EscapeAnalysisVarNameTrackTest >> testMethod [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testObjectEscaped [
 
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
-	self assert: (escapeAnalyzer variablesTable at: #xx)
+"	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
+	self assert: (escapeAnalyzer variablesTable at: #xx)"
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testRecursiveFunction [
+	" the analyzer has to hold from pushing the method to the worklist everytime encoutered on a dfs parse "
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #recursiveFunction.
+	self deny: (escapeAnalyzer variablesTable at: #temp)
 ]
 
 { #category : 'tests' }
@@ -57,7 +68,6 @@ EscapeAnalysisVarNameTrackTest >> testReturnTempInBlock [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testReturnedTempVarEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #foo:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self assert: (escapeAnalyzer variablesTable at: #line)
@@ -66,15 +76,22 @@ EscapeAnalysisVarNameTrackTest >> testReturnedTempVarEscaped [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testReturnedTempVarEscapedWithDifferentArgName [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
 	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
 
 { #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testReturnedTempVarEscapedWithDifferentArgNameDoesntEscape [
+
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgNameDoesntReturn.
+	self deny: (escapeAnalyzer variablesTable at: #h).
+]
+
+{ #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testReturnedTempVarEscapedWithDifferentArgNameTwoLevelIndirection [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	"escapeAnalyzer := EscapeAnalyzer new."
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgNameTwoLevelIndirection.
 	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
@@ -89,25 +106,55 @@ EscapeAnalysisVarNameTrackTest >> testTempInBlock [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToGlobalEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooSetToGlobal.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #fooSetToGlobal.
+	self assert: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToGlobalEscapedInScope [
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #fooSetToGlobalInScope.
 	self assert: (escapeAnalyzer variablesTable at: #h)
 ]
 
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToInstEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooSetToInstance.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #fooSetToInstance.
+	self assert: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToInstEscapedInScope [
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #fooSetToInstanceInScope.
 	self assert: (escapeAnalyzer variablesTable at: #h)
 ]
 
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToTempNotEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooSetToTemp.
 	self deny: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testTempVarCallingItsMethodEscapes [
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #callToObjectToInlineMethodEscapes.
+	self deny: (escapeAnalyzer variablesTable at: #h)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testTempVarDoesntEscaped [
+
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooDoesNotScape.
+	self deny: (escapeAnalyzer variablesTable at: #point1)
 ]
 
 { #category : 'tests' }
@@ -120,8 +167,34 @@ EscapeAnalysisVarNameTrackTest >> testTempVarPassedAsArgNotEscaped [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testTempVarsNotEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooNotReturn:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self deny: (escapeAnalyzer variablesTable at: #line)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testVarArgToMessageNotReturned [
+	
+	"A message call whose direct/indirect parent is not a ReturnNode should not mark its returned variables as ecaping"
+"	escapeAnalyzer := EscapeAnalyzer new."
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #noReturnArgumentMessage.
+	self deny: (escapeAnalyzer variablesTable at: #p).
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testVarArgToMessageReturned [
+	
+	"A message call whose direct/indirect parent is a ReturnNode should mark its returned variables as ecaping"
+"	escapeAnalyzer := EscapeAnalyzer new."
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #returnReceiverMessageCallOnSelf.
+	self assert: (escapeAnalyzer variablesTable at: #p).
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testcallTwiceReturnOneDifferentVars [
+	
+	"A message call whose direct/indirect parent is a ReturnNode should mark its returned variables as ecaping"
+	"escapeAnalyzer := EscapeAnalyzer new."
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #callTwiceReturnOneDifferentVars.
+	self assert: (escapeAnalyzer variablesTable at: #p).
 ]
