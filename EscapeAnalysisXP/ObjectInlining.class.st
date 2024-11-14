@@ -19,6 +19,7 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer setWorkListReturnStatus: OrderedCollection new.
 	objectInlineCandidates := OrderedCollection new
 ]
 
@@ -29,9 +30,9 @@ ObjectInlining >> lookForNewStatementsNotEscaped: aMethod [
 	escapeAnalyzer variablesTable keysAndValuesDo: [ :key :value |
 		(value isMemberOf: False) ifTrue: [
 			aMethod ast body assignmentNodes do: [ :node |
-				(node references: key) ifTrue: [
-					(node parent isAssignment and: [ node parent value selector = #new ])
-						ifTrue: [ self addOIcandidate: node parent ] ] ] ] ]
+				((node references: key) and:[ (node value isMessage)]) ifTrue: [( node value selector = #new) ifTrue: [
+					
+					self addOIcandidate: node  ] ] ] ]]
 ]
 
 { #category : 'parsing' }
