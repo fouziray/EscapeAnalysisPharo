@@ -7,6 +7,12 @@ RBBlockNode >> blockNameTracksVarNamed: aVariableName [
 ]
 
 { #category : '*EscapeAnalysisXP' }
+RBBlockNode >> namePrefixedWithClassAndMethod: aMethod [
+
+	^ self asString
+]
+
+{ #category : '*EscapeAnalysisXP' }
 RBBlockNode >> treatNode: escapeAnalyzer [
 
 	self body children do: [ :child | child treatNode: escapeAnalyzer ]
@@ -21,8 +27,18 @@ RBBlockNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 then whenever a variable is escaped this must bubble up until the returned variable in the block node
 	"
 
-	| catchReturnedVariableName returnValue |
+	| catchReturnedVariableName returnValue referencedTrackedVariables |
+	"dont analyze the code inside too much just check if a variable is sent to it then assume the block as tracked, if so the value is to""escapeAnalyzer analyzeBlockClosure: self inAst: escapeAnalyzer currentMethod ast body ."
+	
+ (referencedTrackedVariables := trackedVariablesTable keys select:[ :variable| self references: variable  ]) ifNotEmpty: [
+	trackedVariablesTable
+						at: (self namePrefixedWithClassAndMethod: escapeAnalyzer )
+						put: referencedTrackedVariables
+	].
+
+"
 	returnValue := 'self'.
+
 	self body children do: [ :child |
 		child isReturn
 			ifTrue: [
@@ -41,5 +57,5 @@ then whenever a variable is escaped this must bubble up until the returned varia
 					               given: trackedVariablesTable.
 				child isVariable ifFalse: [ returnValue := 'self' ] ] ].
 
-	^ returnValue
+	^ returnValue"
 ]

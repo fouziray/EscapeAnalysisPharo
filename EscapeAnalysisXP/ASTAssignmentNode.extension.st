@@ -29,25 +29,23 @@ ASTAssignmentNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 				                     treatNode: escapeAnalyzer
 				                     given: trackedVariablesTable.
 
-			self value isBlock ifTrue: [
-				(trackedVariablesTable includesKey: nameOfReturnedVar) ifTrue: [
+			(self value isBlock and: [
+				 escapeAnalyzer
+					 checkNode: self value
+					 trackedIn: trackedVariablesTable ]) ifTrue: [ "(trackedVariablesTable includesKey: self value asString ) ifTrue: [
 					trackedVariablesTable
 						at: self variable name
-						put: nameOfReturnedVar ] ] ]
+						put: nameOfReturnedVar ]"
+				(trackedVariablesTable includesKey: self value asString) ifTrue: [
+					trackedVariablesTable
+						at: self variable name
+						put: self value asString ] ] ]
 		ifTrue: [
-			self variable isClassVariable ifTrue: [
-				escapeAnalyzer
-					markEscaped: self value name
-					inTable: trackedVariablesTable.
-				^ self ].
-			self variable isInstanceVariable ifTrue: [
-				escapeAnalyzer
-					markEscaped: self value name
-					inTable: trackedVariablesTable.
-				^ self ].
-			self variable isGlobalVariable ifTrue: [
-				escapeAnalyzer
-					markEscaped: self value name
-					inTable: trackedVariablesTable.
-				^ self ] ]
+			({ #isClassVariable. #isGlobalVariable. #isInstanceVariable }
+				 asOrderedCollection anySatisfy: [ :e | self variable perform: e ])
+				ifTrue: [
+					escapeAnalyzer
+						markEscaped: self value name
+						inTable: trackedVariablesTable.
+					^ self ] ]
 ]
