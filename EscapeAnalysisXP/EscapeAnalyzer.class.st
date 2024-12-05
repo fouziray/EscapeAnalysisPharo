@@ -42,6 +42,19 @@ EscapeAnalyzer >> addTrackingTableForElements: aTrackedVariablesTable [
 	trackingTablesList add: aTrackedVariablesTable.
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> analyzeBlockClosure: aBlockNode inAst: anAst [
+
+	| visitor context |
+	context := EscapeAnalysisContext new.
+	visitor := EscapeAnalysisBlockVisitor new.
+	visitor context: context.
+	context scope: anAst.
+	visitor visitBlockNode: aBlockNode.
+	"aBlockNode acceptVisitor: visitor."
+	^ context escapedVariables
+]
+
 { #category : 'testing' }
 EscapeAnalyzer >> analyzeMethod: aMethod [
 

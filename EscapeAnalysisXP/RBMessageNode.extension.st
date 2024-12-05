@@ -66,12 +66,12 @@ RBMessageNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 					                           self selector implementors first
 						                           argumentNames.
 				newMethodArgumentsNames addFirst: #self.
-				e variable name
+				e name
 				~= (newMethodArgumentsNames at: (self children indexOf: e))
 					ifTrue: [
 						newTrackedVariablesTable
 							at: (newMethodArgumentsNames at: (self children indexOf: e))
-							put: e variable name ].
+							put: e name ].
 
 				isRcvrOrArgTracked := true ] ].
 

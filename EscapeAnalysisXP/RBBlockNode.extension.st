@@ -7,6 +7,12 @@ RBBlockNode >> blockNameTracksVarNamed: aVariableName [
 ]
 
 { #category : '*EscapeAnalysisXP' }
+RBBlockNode >> name [
+
+	^ self asString
+]
+
+{ #category : '*EscapeAnalysisXP' }
 RBBlockNode >> namePrefixedWithClassAndMethod: aMethod [
 
 	^ self asString
