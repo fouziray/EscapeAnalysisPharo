@@ -48,57 +48,71 @@ RBMessageNode >> treatNode: escapeAnalyzer [
 { #category : '*EscapeAnalysisXP' }
 RBMessageNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 
-	| nodesToTreat isRcvrOrArgTracked newTrackedVariablesTable |
+	| newMethodArgumentsNames implementors nodesToTreat isRcvrOrArgTracked newTrackedVariablesTable listOfNewTrackedVariableTables |
 	"Treat only the arguments that are variables and the receiver"
+	
 	nodesToTreat := { self receiver } , self arguments.
-
+	implementors := self selector implementors.
 	isRcvrOrArgTracked := false.
+	listOfNewTrackedVariableTables := OrderedCollection new.
 	newTrackedVariablesTable := (Dictionary new:
 		                             nodesToTreat size
 		                             + trackedVariablesTable size) addAll:
 		                            trackedVariablesTable.
-	nodesToTreat do: [ :e |
-		(escapeAnalyzer checkNode: e trackedIn: trackedVariablesTable)
-			ifTrue: [
-				| newMethodArgumentsNames |
-				"1 halt."
-				newMethodArgumentsNames := OrderedCollection newFrom:
-					                           self selector implementors first
-						                           argumentNames.
-				newMethodArgumentsNames addFirst: #self.
-				e name
-				~= (newMethodArgumentsNames at: (self children indexOf: e))
-					ifTrue: [
+	newMethodArgumentsNames := OrderedCollection newFrom:
+		                           (self selector implementors collect: [
+			                            :each |
+			                            | c |
+			                            c := OrderedCollection newFrom:
+				                                 each argumentNames.
+			                            c addFirst: #self.
+			                            c ]).
+	newMethodArgumentsNames do: [ :argNames |
+		newTrackedVariablesTable := (Dictionary new:
+			                             nodesToTreat size
+			                             + trackedVariablesTable size) addAll:
+			                            trackedVariablesTable.
+
+		nodesToTreat do: [ :e |
+			(escapeAnalyzer checkNode: e trackedIn: trackedVariablesTable)
+				ifTrue: [ "| newMethodArgumentsNames |""newMethodArgumentsNames addFirst: #self."
+					e name ~= (argNames at: (self children indexOf: e)) ifTrue: [
 						newTrackedVariablesTable
-							at: (newMethodArgumentsNames at: (self children indexOf: e))
+							at: (argNames at: (self children indexOf: e))
 							put: e name ].
 
-				isRcvrOrArgTracked := true ] ].
+					isRcvrOrArgTracked := true ] ].
 
+		listOfNewTrackedVariableTables add: newTrackedVariablesTable ].
 
-	"(escapeAnalyzer isSpecialMethod: self selector) ifFalse: ["
-	isRcvrOrArgTracked ifTrue: [ "]"
-		(escapeAnalyzer isSpecialMethod: self selector)
-			ifFalse: [
-				| implementors returnStateOfMessage |
-				returnStateOfMessage := false.
-				implementors := self selector implementors.
-				(self allParents anySatisfy: #isReturn) ifTrue: [
-					escapeAnalyzer setReturnedFlag: true.
+	
 
-					returnStateOfMessage := escapeAnalyzer currentMethodReturnStatus ].
-				implementors size timesRepeat: [
-					escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ].
-
-				escapeAnalyzer addTrackingTableForElements:
-					newTrackedVariablesTable.
-				escapeAnalyzer addMethodsToWorkList: implementors ]
-			ifTrue: [
-				self selector = #value ifTrue: [
+		isRcvrOrArgTracked ifTrue: [
+			(escapeAnalyzer isSpecialMethod: self selector)
+				ifFalse: [
+					implementors size < 10 ifTrue: [
+					| returnStateOfMessage |
 					
-					escapeAnalyzer
-						markEscaped: self receiver name
-						inTable: trackedVariablesTable ] ] ].
+					returnStateOfMessage := false.
+
+					(self allParents anySatisfy: #isReturn) ifTrue: [
+						escapeAnalyzer setReturnedFlag: true.
+
+						returnStateOfMessage := escapeAnalyzer currentMethodReturnStatus ].
+
+
+					implementors size timesRepeat: [
+						escapeAnalyzer addCurrentMethodReturnStatus:
+							returnStateOfMessage ].
+					listOfNewTrackedVariableTables do: [ :trackedVarTable |
+						escapeAnalyzer addTrackingTableForElements: trackedVarTable ].
+					escapeAnalyzer addMethodsToWorkList: implementors ]]
+				ifTrue: [
+			
+					self selector = #value ifTrue: [
+						escapeAnalyzer
+							markEscaped: self receiver name
+							inTable: trackedVariablesTable ] ] ] .
 
 	self children do: [ :node |
 		node treatNode: escapeAnalyzer given: trackedVariablesTable ]
