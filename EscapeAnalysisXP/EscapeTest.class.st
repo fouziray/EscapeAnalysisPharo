@@ -24,7 +24,7 @@ EscapeTest >> testArgBlockReturnsTemp [
 
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
-	self assert: (escapeAnalyzer checkEscaped: #tempo)
+	self assert: (escapeAnalyzer isVariableEscaped: #tempo)
 ]
 
 { #category : 'tests - find variable' }

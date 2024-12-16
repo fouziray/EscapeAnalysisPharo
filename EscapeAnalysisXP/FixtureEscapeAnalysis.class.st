@@ -5,9 +5,9 @@ Class {
 		'x',
 		'inst'
 	],
-	#category : 'EscapeAnalysisXP-Core',
+	#category : 'EscapeAnalysisXP-Tests',
 	#package : 'EscapeAnalysisXP',
-	#tag : 'Core'
+	#tag : 'Tests'
 }
 
 { #category : 'class initialization' }
@@ -38,6 +38,30 @@ FixtureEscapeAnalysis >> callMethodWithDifferentArgNameTwoLevelIndirection [
 	| h |
 	h := nil.
 	^ self totoWithDifferentArgNameTwoLevelIndirection: h
+]
+
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> callNestedMessages [
+
+	| o |
+	o := super twoImplementationMethods.
+	self receiverMessage singleImplementation: (self bar: o)
+]
+
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> callNestedMessages2 [
+
+	| o |
+	o := Object twoImplementationMethods.
+	self receiverMessage singleImplementation: (self localMessage: o)
+]
+
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> callNestedMessages3 [
+
+	| o |
+	o := self foo twoImplementationMethods.
+	self receiverMessage singleImplementation: (self bar: o)
 ]
 
 { #category : 'accessing' }
@@ -166,6 +190,10 @@ FixtureEscapeAnalysis >> fooSetterToTemp: h [
 	^ aTemp
 ]
 
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> localMessage: arg [
+]
+
 { #category : 'tests' }
 FixtureEscapeAnalysis >> method [
 
@@ -178,6 +206,39 @@ FixtureEscapeAnalysis >> method [
 FixtureEscapeAnalysis >> methodCallsMethodWithReturn: anArgg [
 
 	^ self methodWithReturn: anArgg
+]
+
+{ #category : 'to test is returned' }
+FixtureEscapeAnalysis >> methodThatDoesNotReturnTheMethodWhoseResultShouldBeReturned [
+
+	self methodWhoseResultIsReturned 
+
+]
+
+{ #category : 'to test is returned' }
+FixtureEscapeAnalysis >> methodThatDoesNotReturnTheMethodWhoseResultShouldBeReturned2 [
+
+	self methodWhoseResultIsNotReturned 
+
+]
+
+{ #category : 'to test is returned' }
+FixtureEscapeAnalysis >> methodThatReturnsTheMethodWhoseResultShouldBeReturned [
+
+	^ self methodWhoseResultIsReturned 
+
+]
+
+{ #category : 'to test is returned' }
+FixtureEscapeAnalysis >> methodWhoseResultIsNotReturned [
+
+	^ 666
+]
+
+{ #category : 'to test is returned' }
+FixtureEscapeAnalysis >> methodWhoseResultIsReturned [
+
+	^ 33
 ]
 
 { #category : 'as yet unclassified' }
@@ -236,6 +297,10 @@ FixtureEscapeAnalysis >> objectEscaped [
 	^ self tata: y
 ]
 
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> receiverMessage [
+]
+
 { #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> recursiveFunction [
 	| temp |
@@ -281,6 +346,10 @@ FixtureEscapeAnalysis >> returnReceiverMessageCallOnSelf [
 	^ p methodWithReturnSelf
 ]
 
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> singleImplementation: arg [
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> tata: y [
 
@@ -303,6 +372,12 @@ FixtureEscapeAnalysis >> totoWithDifferentArgName: aUniqueName [
 FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirection: aName [
 
 	^ self totoWithDifferentArgName: aName
+]
+
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> twoImplementationMethods [
+
+	
 ]
 
 { #category : 'accessing' }

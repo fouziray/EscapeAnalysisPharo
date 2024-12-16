@@ -28,12 +28,6 @@ EscapeAnalysisContext >> appendTrackedVariablesTable: aTrackedVariablesTable [
 	^ trackedVariablesTable
 ]
 
-{ #category : 'as yet unclassified' }
-EscapeAnalysisContext >> checkEscaped: aName [
-
-	^ (self findVariableByName: aName) escapeStatus
-]
-
 { #category : 'accessing' }
 EscapeAnalysisContext >> currentBlock [
 
@@ -70,13 +64,18 @@ EscapeAnalysisContext >> findVariableByName: aName [
 { #category : 'initialization' }
 EscapeAnalysisContext >> initialize [
 
+	super initialize.
 	workingList := OrderedCollection new.
-	next := nil.
-	scope := nil.
 	workingListIndex := 1.
 	currentTrackedVars := OrderedCollection new.
 	trackedVariablesTable := OrderedCollection new.
 	trackedVariablesTable add: currentTrackedVars
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalysisContext >> isVariableEscaped: aName [
+
+	^ (self findVariableByName: aName) escapeStatus
 ]
 
 { #category : 'as yet unclassified' }

@@ -33,8 +33,7 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 
 	implementors size timesRepeat: [
 		| newMessageContext |
-		newMessageContext := EAMethodContext new escapeAnalysisContext:
-			                     escapeAnalyzer context.
+		newMessageContext := EAMethodContext new escapeAnalysisContext: escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
 		escapeAnalyzer extendCtxList: newMessageContext.
 		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
@@ -43,7 +42,7 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 { #category : 'adding' }
 EscapeAnalyzerVisitor >> addCurrentMethodReturnStatus: aBoolean [
 
-	workListReturnStatus add: aBoolean .
+	workListReturnStatus add: aBoolean
 ]
 
 { #category : 'adding' }
@@ -55,10 +54,10 @@ EscapeAnalyzerVisitor >> addMethodsToWorkList: aMethodCollection [
 { #category : 'adding' }
 EscapeAnalyzerVisitor >> addTrackingTableForElements: aTrackedVariablesTable [
 
-	trackingTablesList add: aTrackedVariablesTable.
+	trackingTablesList add: aTrackedVariablesTable
 ]
 
-{ #category : 'testing' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 
 	| savedStateOfReturnFlag |
@@ -75,37 +74,6 @@ EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 				"savedStateOfReturnFlag := self currentMethodIsReturned." ] ]
 ]
 
-{ #category : 'testing' }
-EscapeAnalyzerVisitor >> checkEscaped: aName [
-
-	^ context checkEscaped: aName
-]
-
-{ #category : 'queries' }
-EscapeAnalyzerVisitor >> checkNethodIsTreated: aMethod [
-
-	^ ((context workingList indexOf: aMethod) < context workingListIndex)
-	not
-]
-
-{ #category : 'testing' }
-EscapeAnalyzerVisitor >> checkNode: anASTNode trackedIn: aTable [
-
-	anASTNode isVariable ifFalse: [
-		anASTNode isBlock ifTrue: [
-			^ self checkVariable: anASTNode asString in: aTable ].
-		^ false ].
-	^ self checkVariable: anASTNode variable name in: aTable
-]
-
-{ #category : 'testing' }
-EscapeAnalyzerVisitor >> checkVariable: anVariableNode in: aTable [
-
-	([(aTable includesKey: anVariableNode )] on: SubscriptOutOfBounds do: [ false ])
-		ifTrue: [ ^ true ].
-	^ false
-]
-
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> context [
 
@@ -116,8 +84,6 @@ EscapeAnalyzerVisitor >> context [
 EscapeAnalyzerVisitor >> context: anEscapeAnalysisContext [
 
 	context := anEscapeAnalysisContext.
-
-	^ context
 ]
 
 { #category : 'queries' }
@@ -128,7 +94,7 @@ EscapeAnalyzerVisitor >> currentMethodIsReturned [
 
 { #category : 'adding' }
 EscapeAnalyzerVisitor >> currentMethodReturnStatus [
-
+	self flag: #ChangeNamePlease.
 	^ workListReturnStatus removeFirst
 ]
 
@@ -138,22 +104,22 @@ EscapeAnalyzerVisitor >> currentTrackedVars [
 	^ currentTrackedVars
 ]
 
-{ #category : 'testing' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitor >> escapeAnalyze: method [
 
 	| next tempVariables currentTrackVarsTable |
 	tempVariables := method ast body temporaryVariables.
 
 	topLevel := true.
-	variablesTable := context trackVariables:
-		                  method ast body temporaryNames.
+	variablesTable := context trackVariables: method ast body temporaryNames.
 	workList := context extendWorkinglist: method.
 	self addCurrentMethodReturnStatus: true.
-	trackingTablesList := context appendTrackedVariablesTable:
-		                      variablesTable shallowCopy.
+	trackingTablesList := context appendTrackedVariablesTable: variablesTable shallowCopy.
 	currentTrackVarsTable := variablesTable.
-	[ (next := context nextMethod) isNotNil ] whileTrue: [ "	topLevel ifTrue:[ self setReturnedFlag: true ]. "
-		(self checkNethodIsTreated: next)
+	
+	[ (next := context nextMethod) isNotNil ] 
+		whileTrue: [ 
+		(self isMethodTreated: next)
 			ifTrue: [ " Restitute the history of the analysis, apply the escaping tag to variables corresponding to that"
 				 ]
 			ifFalse: [ " these two conditions are significantly increasing analysis duration"
@@ -202,13 +168,21 @@ EscapeAnalyzerVisitor >> initialize [
 	context := EscapeAnalysisContext new.
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
-	self extendCtxList: context
+	self extendCtxList: context.
+	trackVariableNameChanges := Dictionary new
 ]
 
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> isAtTopLevel [
 
 	^ topLevel
+]
+
+{ #category : 'queries' }
+EscapeAnalyzerVisitor >> isMethodTreated: aMethod [
+
+	^ ((context workingList indexOf: aMethod) < context workingListIndex)
+	not
 ]
 
 { #category : 'testing' }
@@ -232,32 +206,9 @@ EscapeAnalyzerVisitor >> isTrackedTempVariable: anVariableNode [
 ]
 
 { #category : 'testing' }
-EscapeAnalyzerVisitor >> isTrackedVariable: anVariableNode [
+EscapeAnalyzerVisitor >> isVariableEscaped: aName [
 
-	(variablesTable includesKey: anVariableNode variable name)
-		ifTrue: [ ^ true ].
-	^ false
-]
-
-{ #category : 'analyse' }
-EscapeAnalyzerVisitor >> markEscaped: aVariableName inTable: trackedVariablesTable [
-
-	| unwrapVariableName |
-	unwrapVariableName := aVariableName shallowCopy.
-	[
-	(trackedVariablesTable at: unwrapVariableName ifAbsent: [  ])
-		isSymbol
-	| (trackedVariablesTable at: unwrapVariableName ifAbsent: [  ])
-			isCollection ] whileTrue: [
-		(trackedVariablesTable at: unwrapVariableName) isString not ifTrue: [
-			(trackedVariablesTable at: unwrapVariableName) do: [ :each |
-				self markEscaped: each inTable: trackedVariablesTable.
-				^ self ] ].
-
-		unwrapVariableName := trackedVariablesTable at: unwrapVariableName ].
-
-	(trackedVariablesTable at: unwrapVariableName) ifFalse: [
-		trackedVariablesTable at: unwrapVariableName put: true ]
+	^ context isVariableEscaped: aName
 ]
 
 { #category : 'analyse' }
@@ -278,10 +229,16 @@ EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 	currentMethodIsReturned := aBoolean
 ]
 
-{ #category : 'adding' }
+{ #category : 'accessing' }
 EscapeAnalyzerVisitor >> setWorkListReturnStatus: aCollection [
 
 	workListReturnStatus := aCollection
+]
+
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
+
+	^ self workList size < 500 and: [ implementors size < 5 ]
 ]
 
 { #category : 'testing' }
@@ -295,8 +252,7 @@ EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> updateTrackedVariableName: association forMethod: methodName [
 
-trackVariableNameChanges ifNil:[ trackVariableNameChanges:= Dictionary new ].
-trackVariableNameChanges at: methodName update: [ :v | v add: association ] initial: [  OrderedCollection newFrom: {association}].
+	trackVariableNameChanges at: methodName update: [ :v | v add: association ] initial: [  OrderedCollection newFrom: {association}].
 ]
 
 { #category : 'analyse' }
@@ -343,8 +299,7 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				variableNode addReferenceToTrackedVariable:
 					(self findVariableByName: aNode value) ] ]
 		ifTrue: [
-			({ #isClassVariable. #isGlobalVariable. #isInstanceVariable }
-				 asOrderedCollection anySatisfy: [ :e | aNode variable perform: e ])
+			aNode variable isEscaping 
 				ifTrue: [
 					self markVariableAsEscaped: aNode value.
 					^ aNode ] ]
@@ -359,42 +314,18 @@ EscapeAnalyzerVisitor >> visitBlockNode: aBlockNode [
 then whenever a variable is escaped this must bubble up until the returned variable in the block node
 	"
 
-	| catchReturnedVariableName returnValue referencedTrackedVariables trackedBlockNode |
-	"dont analyze the code inside too much just check if a variable is sent to it then assume the block as tracked, if so the value is to""escapeAnalyzer analyzeBlockClosure: self inAst: escapeAnalyzer currentMethod ast body ."
-	(referencedTrackedVariables := self getTrackVariableNames
-		                               select: [ :variable |
-		                               aBlockNode references: variable ])
-		ifNotEmpty: [ "
-	returnValue := 'self'.
-
-	self body children do: [ :child |
-		child isReturn
-			ifTrue: [
-				catchReturnedVariableName := child
-					                             treatNode: escapeAnalyzer
-					                             given: trackedVariablesTable.
-
-				catchReturnedVariableName ifNotNil: [
-					trackedVariablesTable
-						at: (self blockNameTracksVarNamed: catchReturnedVariableName)
-						put: catchReturnedVariableName.
-					returnValue := catchReturnedVariableName ] ]
-			ifFalse: [
-				returnValue := child
-					               treatNode: escapeAnalyzer
-					               given: trackedVariablesTable.
-				child isVariable ifFalse: [ returnValue := 'self' ] ] ].
-
-	^ returnValue"
-			trackedBlockNode := self  trackVariable: aBlockNode. "namePrefixedWithClassAndMethod:
-					                     escapeAnalyzer" " later to be corrected to support all path of the method"
+	| referencedTrackedVariables trackedBlockNode |
+	
+	(referencedTrackedVariables := self getTrackVariableNames select: [  :variable |  aBlockNode references: variable ])
+		ifNotEmpty: [ 
+			trackedBlockNode := self trackVariable: aBlockNode.
 			trackedBlockNode referencesTV: referencedTrackedVariables ]
 ]
 
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
-	| implementors nodesToTreat "newTrackedVariablesTable" listOfNewTrackedVariableTables |
+	| implementors nodesToTreat listOfNewTrackedVariableTables |
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
 	implementors := aMessageNode selector implementors.
@@ -404,7 +335,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 		 (self findVariableByName: e) isNotNil ]) ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [
-				(self workList size < 500 and: [ implementors size < 5 ])
+				(self shouldConsiderImplementors: implementors)
 					ifTrue: [
 						| returnStateOfMessage |
 						returnStateOfMessage := false.
@@ -450,12 +381,6 @@ EscapeAnalyzerVisitor >> visitReturnNode: aNode [
 			ifFalse: [ self visitNode: node ] ].
 
 	^ returnsThisVar
-]
-
-{ #category : 'visiting' }
-EscapeAnalyzerVisitor >> visitVariableNode: aNode [
-
-	^ aNode name
 ]
 
 { #category : 'accessing' }
