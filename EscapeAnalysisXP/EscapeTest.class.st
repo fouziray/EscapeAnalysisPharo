@@ -14,10 +14,9 @@ Class {
 EscapeTest >> setUp [
 
 	super setUp.
-	escapeAnalyzer := EscapeAnalyzerVisitOOr new.
+	escapeAnalyzer := EscapeAnalyzerVisitor new.
 	escapeAnalyzer setWorkListReturnStatus: OrderedCollection new.
-	escapeAnalyzer setReturnedFlag: false.
-
+	escapeAnalyzer setReturnedFlag: false
 ]
 
 { #category : 'tests' }

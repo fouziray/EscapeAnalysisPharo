@@ -19,7 +19,7 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 { #category : 'as yet unclassified' }
 ObjectInlining >> initialize [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzerVisitor new.
 	escapeAnalyzer setWorkListReturnStatus: OrderedCollection new.
 	objectInlineCandidates := OrderedCollection new
 ]
