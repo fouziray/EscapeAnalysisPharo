@@ -1,13 +1,13 @@
-Extension { #name : 'RBBlockNode' }
+Extension { #name : 'ASTBlockNode' }
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> blockNameTracksVarNamed: aVariableName [
+ASTBlockNode >> blockNameTracksVarNamed: aVariableName [
 
 	^ self asString , aVariableName
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> escapeAnalyzeNode: escapeAnalyzer [
+ASTBlockNode >> escapeAnalyzeNode: escapeAnalyzer [
 	" treat following cases:
 1- when the value returned is tracked you must follow the blockNode as a variable and see where it is assigned 
 2- add track to a variable if it is assigned to a tracked variable
@@ -17,7 +17,7 @@ then whenever a variable is escaped this must bubble up until the returned varia
 
 	| catchReturnedVariableName returnValue referencedTrackedVariables trackedBlockNode |
 	"dont analyze the code inside too much just check if a variable is sent to it then assume the block as tracked, if so the value is to""escapeAnalyzer analyzeBlockClosure: self inAst: escapeAnalyzer currentMethod ast body ."
-	(referencedTrackedVariables := escapeAnalyzer getTVNames select: [
+	(referencedTrackedVariables := escapeAnalyzer getTrackVariableNames select: [
 		                               :variable |
 		                               self references: variable ])
 		ifNotEmpty: [
@@ -51,31 +51,31 @@ then whenever a variable is escaped this must bubble up until the returned varia
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> name [
+ASTBlockNode >> name [
 
 	^ self asString
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> namePrefixedWithClassAndMethod: aMethod [
+ASTBlockNode >> namePrefixedWithClassAndMethod: aMethod [
 
 	^ self asString
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> treatNode2: escapeAnalyzer [
+ASTBlockNode >> treatNode2: escapeAnalyzer [
 
 	self body children do: [ :child | child treatNode2: escapeAnalyzer ]
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> treatNode: escapeAnalyzer [
+ASTBlockNode >> treatNode: escapeAnalyzer [
 
 	self body children do: [ :child | child treatNode: escapeAnalyzer ]
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBBlockNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
+ASTBlockNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 	" treat following cases:
 1- when the value returned is tracked you must follow the blockNode as a variable and see where it is assigned 
 2- add track to a variable if it is assigned to a tracked variable

@@ -22,8 +22,9 @@ Class {
 		'currentTrackedVars',
 		'treatedMethodsEscapeHistory'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }
 
 { #category : 'adding' }
@@ -42,6 +43,21 @@ EscapeAnalyzer >> addMethodsToWorkList: aMethodCollection [
 EscapeAnalyzer >> addTrackingTableForElements: aTrackedVariablesTable [
 
 	trackingTablesList add: aTrackedVariablesTable.
+]
+
+{ #category : 'testing' }
+EscapeAnalyzer >> analyze: method [
+
+	| next tempVariables |
+	tempVariables := method ast body temporaryVariables.
+	variablesTable := Dictionary
+		newFromKeys: tempVariables
+		andValues: (Array new: tempVariables size withAll: false).
+
+	workList := OrderedCollection with: method.
+	[ workList isNotEmpty ] whileTrue: [
+		next := workList removeLast.
+		self analyzeMethod: next ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -234,6 +250,14 @@ EscapeAnalyzer >> markEscaped: aVariableName inTable: trackedVariablesTable [
 EscapeAnalyzer >> markVariableAsEscaped: aVariableNode [
 
 	variablesTable at: aVariableNode name put: true
+]
+
+{ #category : 'testing' }
+EscapeAnalyzer >> populateWorkList: aMethod [
+
+	aMethod ast body allChildren
+		select: [ :node | node isMessage ]
+		thenDo: [ :node | node treatNode: self ]
 ]
 
 { #category : 'as yet unclassified' }

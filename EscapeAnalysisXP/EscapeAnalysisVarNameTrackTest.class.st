@@ -20,6 +20,14 @@ EscapeAnalysisVarNameTrackTest >> setUp [
 ]
 
 { #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> test2ReturnedTempVarEscapedWithDifferentArgName [
+
+	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
+	self assert: (escapeAnalyzer variablesTable at: #h).
+]
+
+{ #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testArgBlockReturnsTemp [
 
 	escapeAnalyzer escapeAnalyze:
@@ -32,6 +40,13 @@ EscapeAnalysisVarNameTrackTest >> testMethod [
 
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #method.
 	self assert: (escapeAnalyzer variablesTable at: #a)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testObjectEscaped [
+
+"	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
+	self assert: (escapeAnalyzer variablesTable at: #xx)"
 ]
 
 { #category : 'tests' }

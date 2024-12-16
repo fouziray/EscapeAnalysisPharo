@@ -5,8 +5,9 @@ Class {
 		'eaContext',
 		'returnStatus'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }
 
 { #category : 'as yet unclassified' }

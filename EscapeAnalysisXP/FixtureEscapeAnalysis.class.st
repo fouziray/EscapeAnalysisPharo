@@ -5,8 +5,9 @@ Class {
 		'x',
 		'inst'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }
 
 { #category : 'class initialization' }

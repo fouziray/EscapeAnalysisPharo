@@ -1,7 +1,19 @@
-Extension { #name : 'RBMessageNode' }
+Extension { #name : 'ASTMessageNode' }
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> escapeAnalyzeNode: escapeAnalyzer [
+ASTMessageNode >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors [
+
+	implementors size timesRepeat: [
+		| newMessageContext |
+		newMessageContext := EAMethodContext new escapeAnalysisContext:
+			                     escapeAnalyzer context.
+		newMessageContext returnStatus: returnStateOfMessage.
+		escapeAnalyzer extendCtxList: newMessageContext.
+		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
+]
+
+{ #category : '*EscapeAnalysisXP' }
+ASTMessageNode >> escapeAnalyzeNode: escapeAnalyzer [
 
 	| implementors nodesToTreat "newTrackedVariablesTable" listOfNewTrackedVariableTables |
 	"Treat only the arguments that are variables and the receiver"
@@ -32,22 +44,15 @@ nodesToTreat do:[
 						returnStateOfMessage := false.
 
 						((self allParents anySatisfy: #isReturn) and: [
-							 escapeAnalyzer isAtTopLevel ])
-							ifTrue: [
-								escapeAnalyzer setReturnedFlag: true.
-								
+							 escapeAnalyzer isAtTopLevel ]) ifTrue: [
+							escapeAnalyzer setReturnedFlag: true.
 							returnStateOfMessage := escapeAnalyzer
 								                        currentMethodReturnStatus ].
+						self
+							addContext: returnStateOfMessage
+							to: escapeAnalyzer
+							forImplementors: implementors.
 
-
-						implementors size timesRepeat: [
-							|newMessageContext|
-							
-							newMessageContext := EAMethodContext new escapeAnalysisContext: (escapeAnalyzer context).
-							newMessageContext returnStatus: returnStateOfMessage .
-							escapeAnalyzer extendCtxList: newMessageContext .
-							escapeAnalyzer addCurrentMethodReturnStatus:
-								returnStateOfMessage .].
 						listOfNewTrackedVariableTables do: [ :trackedVarTable |
 							escapeAnalyzer addTrackingTableForElements: trackedVarTable ].
 						escapeAnalyzer addMethodsToWorkList: implementors ]
@@ -63,7 +68,7 @@ nodesToTreat do:[
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> escapeAnalyzeNode: escapeAnalyzer given: trackedVariablesTable [
+ASTMessageNode >> escapeAnalyzeNode: escapeAnalyzer given: trackedVariablesTable [
 
 	| implementors nodesToTreat "newTrackedVariablesTable" listOfNewTrackedVariableTables |
 	"Treat only the arguments that are variables and the receiver"
@@ -119,7 +124,7 @@ RBMessageNode >> escapeAnalyzeNode: escapeAnalyzer given: trackedVariablesTable 
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> treatNode2: escapeAnalyzer [
+ASTMessageNode >> treatNode2: escapeAnalyzer [
 
 	| nodesToTreat isRcvrOrArgTracked |
 	"Treat only the arguments that are variables and the receiver"
@@ -146,7 +151,7 @@ RBMessageNode >> treatNode2: escapeAnalyzer [
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> treatNode2: escapeAnalyzer given: trackedVariablesTable [
+ASTMessageNode >> treatNode2: escapeAnalyzer given: trackedVariablesTable [
 
 	| nodesToTreat isRcvrOrArgTracked |
 	"Treat only the arguments that are variables and the receiver"
@@ -164,7 +169,7 @@ RBMessageNode >> treatNode2: escapeAnalyzer given: trackedVariablesTable [
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> treatNode: escapeAnalyzer [
+ASTMessageNode >> treatNode: escapeAnalyzer [
 
 	| nodesToTreat isRcvrOrArgTracked |
 	"Treat only the arguments that are variables and the receiver"
@@ -191,7 +196,7 @@ RBMessageNode >> treatNode: escapeAnalyzer [
 ]
 
 { #category : '*EscapeAnalysisXP' }
-RBMessageNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
+ASTMessageNode >> treatNode: escapeAnalyzer given: trackedVariablesTable [
 
 	| newMethodArgumentsNames implementors nodesToTreat isRcvrOrArgTracked newTrackedVariablesTable listOfNewTrackedVariableTables |
 	"Treat only the arguments that are variables and the receiver"

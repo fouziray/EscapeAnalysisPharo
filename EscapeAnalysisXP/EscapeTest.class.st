@@ -28,6 +28,38 @@ EscapeTest >> testArgBlockReturnsTemp [
 	self assert: (escapeAnalyzer checkEscaped: #tempo)
 ]
 
+{ #category : 'tests - find variable' }
+EscapeTest >> testFindVariableNameShouldFindTheVariable [
+
+	| variable |
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooSetToGlobal.
+	"fooSetToGlobal
+		| h |
+		h := nil.
+		self fooSetterToGlobal: h"
+		
+	variable := (escapeAnalyzer findVariableByNameSymbol: #h).
+	self assert: variable class equals: TrackedVariable.
+	self assert: variable escapeStatus.
+	
+]
+
+{ #category : 'tests - find variable' }
+EscapeTest >> testFindVariableNameShouldNotFindTheVariable [
+
+	| variable |
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #fooSetToGlobal.
+	"fooSetToGlobal
+		| h |
+		h := nil.
+		self fooSetterToGlobal: h"
+
+	variable := escapeAnalyzer findVariableByNameSymbol: #hGHHGHH.
+	self assert: variable isNil
+	"Horrible we should have a NullObject in the future."
+]
+
 { #category : 'tests' }
 EscapeTest >> testMethod [
 

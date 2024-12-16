@@ -7,8 +7,9 @@ Class {
 		'escapeStatus',
 		'referencedTrackedVariables'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }
 
 { #category : 'accessing' }

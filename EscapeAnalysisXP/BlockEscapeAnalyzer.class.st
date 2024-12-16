@@ -1,6 +1,7 @@
 Class {
 	#name : 'BlockEscapeAnalyzer',
 	#superclass : 'EscapeAnalyzer1',
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }

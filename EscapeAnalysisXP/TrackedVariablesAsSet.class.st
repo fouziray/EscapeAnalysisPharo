@@ -1,6 +1,7 @@
 Class {
 	#name : 'TrackedVariablesAsSet',
 	#superclass : 'Object',
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }

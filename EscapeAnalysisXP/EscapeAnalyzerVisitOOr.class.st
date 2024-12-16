@@ -23,8 +23,9 @@ Class {
 		'ctxList',
 		'savedFirstCtxRef'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Core',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Core'
 }
 
 { #category : 'adding' }
@@ -33,7 +34,7 @@ EscapeAnalyzerVisitOOr >> addCurrentMethodReturnStatus: aBoolean [
 	workListReturnStatus add: aBoolean .
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'adding' }
 EscapeAnalyzerVisitOOr >> addMethodsToWorkList: aMethodCollection [
 
 	workList addAll: aMethodCollection
@@ -80,20 +81,20 @@ EscapeAnalyzerVisitOOr >> analyzeMethod: aMethod withTrackedVariables: aTrackedV
 				"savedStateOfReturnFlag := self currentMethodIsReturned." ] ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> checkEscaped: aName [
 
 	^ context checkEscaped: aName
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'queries' }
 EscapeAnalyzerVisitOOr >> checkNethodIsTreated: aMethod [
 
 	^ ((context workingList indexOf: aMethod) < context workingListIndex)
 	not
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> checkNode: anASTNode trackedIn: aTable [
 
 	anASTNode isVariable ifFalse: [
@@ -103,7 +104,7 @@ EscapeAnalyzerVisitOOr >> checkNode: anASTNode trackedIn: aTable [
 	^ self checkVariable: anASTNode variable name in: aTable
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> checkVariable: anVariableNode in: aTable [
 
 	([(aTable includesKey: anVariableNode )] on: SubscriptOutOfBounds do: [ false ])
@@ -125,7 +126,7 @@ EscapeAnalyzerVisitOOr >> context: anEscapeAnalysisContext [
 	^ context
 ]
 
-{ #category : 'accessing' }
+{ #category : 'queries' }
 EscapeAnalyzerVisitOOr >> currentMethodIsReturned [
 
 	^ currentMethodIsReturned ifNil:[ false ]
@@ -172,13 +173,13 @@ EscapeAnalyzerVisitOOr >> escapeAnalyze: method [
 	variablesTable := currentTrackVarsTable
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitOOr >> extendCtxList: aContext [
 
 	ctxList add: aContext
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'queries' }
 EscapeAnalyzerVisitOOr >> findVariableByName: anASTNode [
 
 anASTNode isVariable ifFalse: [
@@ -189,14 +190,14 @@ anASTNode isVariable ifFalse: [
 
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'queries' }
 EscapeAnalyzerVisitOOr >> findVariableByNameSymbol: aVariableName [
 
 	^ context findVariableByName: aVariableName
 ]
 
-{ #category : 'as yet unclassified' }
-EscapeAnalyzerVisitOOr >> getTVNames [
+{ #category : 'queries' }
+EscapeAnalyzerVisitOOr >> getTrackVariableNames [
 
 	^ context TVNames
 ]
@@ -222,13 +223,13 @@ EscapeAnalyzerVisitOOr >> isSpecialMethod: aMethodSelector [
 	^ { 'new'. 'value' } includes: aMethodSelector
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> isTrackedNode: anASTNode [
 
 	^ (self findVariableByName: anASTNode) isNotNil
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> isTrackedTempVariable: anVariableNode [
 
 	(variablesTable includesKey: anVariableNode variable name)
@@ -236,7 +237,7 @@ EscapeAnalyzerVisitOOr >> isTrackedTempVariable: anVariableNode [
 	^ false
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'testing' }
 EscapeAnalyzerVisitOOr >> isTrackedVariable: anVariableNode [
 
 	(variablesTable includesKey: anVariableNode variable name)
@@ -244,7 +245,7 @@ EscapeAnalyzerVisitOOr >> isTrackedVariable: anVariableNode [
 	^ false
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitOOr >> markEscaped: aVariableName inTable: trackedVariablesTable [
 
 	| unwrapVariableName |
@@ -265,7 +266,7 @@ EscapeAnalyzerVisitOOr >> markEscaped: aVariableName inTable: trackedVariablesTa
 		trackedVariablesTable at: unwrapVariableName put: true ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitOOr >> markVariableAsEscaped: aVariableNode [
 
 	| aVariable |
@@ -297,14 +298,14 @@ EscapeAnalyzerVisitOOr >> trackVariable: aVariableNodeName [
 	^ context findVariableByName: aVariableNodeName
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitOOr >> updateTrackedVariableName: association forMethod: methodName [
 
 trackVariableNameChanges ifNil:[ trackVariableNameChanges:= Dictionary new ].
 trackVariableNameChanges at: methodName update: [ :v | v add: association ] initial: [  OrderedCollection newFrom: {association}].
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitOOr >> upperMostDeclarationName: name [
 
 	| upperMostDeclarationOfName |
