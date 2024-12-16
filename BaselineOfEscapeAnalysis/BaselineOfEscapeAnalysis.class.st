@@ -7,9 +7,11 @@ Class {
 
 { #category : 'baselines' }
 BaselineOfEscapeAnalysis >> baseline: spec [
+
 	<baseline>
-	
-	spec 
-		package: #'EscapeAnalysisXP'.
-	
+	spec for: #pharo do: [
+		spec package: 'EscapeAnalysisXP'.
+		spec
+			group: 'core' with: #( 'EscapeAnalysisXP' );
+			group: 'default' with: #( 'core' ) ]
 ]
