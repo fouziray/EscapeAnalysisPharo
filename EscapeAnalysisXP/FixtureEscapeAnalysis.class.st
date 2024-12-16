@@ -87,6 +87,14 @@ FixtureEscapeAnalysis >> fooDoesNotScape [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> fooDoesNotScapeWithDoMessage [ 
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> fooDoesScapeWithDoMessage [
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> fooNotReturn: point2 [
 
 	| point1 line |
@@ -166,6 +174,12 @@ FixtureEscapeAnalysis >> method [
 ]
 
 { #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> methodCallsMethodWithReturn: anArgg [
+
+	^ self methodWithReturn: anArgg
+]
+
+{ #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> methodWithReturn: argName [
 
 	^ argName. 
@@ -224,7 +238,24 @@ FixtureEscapeAnalysis >> objectEscaped [
 { #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> recursiveFunction [
 	| temp |
-	temp:= FixtureEscapeAnalysis .
+	temp := FixtureEscapeAnalysis.
+	temp recursiveFunction.
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> repeatedFunctionCallWithEscapingVars [
+
+	| temp a col |
+	temp := FixtureEscapeAnalysis new.
+	col do: [ |tmpInsideBlock | ^ self methodCallsMethodWithReturn: tmpInsideBlock ].
+	self methodWithReturn: Object new.
+	^ self methodCallsMethodWithReturn: a
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> repetadFunctionCall [
+	| temp |
+	temp:= FixtureEscapeAnalysis new .
 	temp recursiveFunction.
 ]
 

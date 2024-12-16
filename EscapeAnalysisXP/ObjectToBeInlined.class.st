@@ -1,8 +1,9 @@
 Class {
 	#name : 'ObjectToBeInlined',
 	#superclass : 'Object',
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Fixture',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Fixture'
 }
 
 { #category : 'as yet unclassified' }

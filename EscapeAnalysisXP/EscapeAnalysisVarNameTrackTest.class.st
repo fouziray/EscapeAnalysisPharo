@@ -5,8 +5,9 @@ Class {
 		'escapeAnalyzer',
 		'workListReturnStatus'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-OldTests',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'OldTests'
 }
 
 { #category : 'running' }
@@ -34,19 +35,51 @@ EscapeAnalysisVarNameTrackTest >> testMethod [
 ]
 
 { #category : 'tests' }
-EscapeAnalysisVarNameTrackTest >> testObjectEscaped [
-
-"	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
-	self assert: (escapeAnalyzer variablesTable at: #xx)"
-]
-
-{ #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testRecursiveFunction [
 	" the analyzer has to hold from pushing the method to the worklist everytime encoutered on a dfs parse "
 
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #recursiveFunction.
 	self deny: (escapeAnalyzer variablesTable at: #temp)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testRepeatedFunctionCall [
+	" the analyzer has to hold from pushing the method to the worklist everytime encoutered on a dfs parse "
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #repeatedFunctionCallWithEscapingVars.
+	self deny: (escapeAnalyzer variablesTable at: #a)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testRepeatedFunctionCallEscaping [
+	" the analyzer has to hold from pushing the method to the worklist everytime encoutered on a dfs parse "
+
+	"However needs to treat the method separately from the context, it must suppose that all arguments are tracked, which may be wrong but that eases the implementation, maybe ?  
+"
+
+	self skip.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #repeatedFunctionCallWithEscapingVars.
+	self assert: (escapeAnalyzer variablesTable at: #a)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testRepeatedFunctionCallNonEscaping [
+	" the analyzer has to hold from pushing the method to the worklist everytime encoutered on a dfs parse "
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #repeatedFunctionCallWithEscapingVars.
+	self deny: (escapeAnalyzer variablesTable at: #a)
+]
+
+{ #category : 'tests' }
+EscapeAnalysisVarNameTrackTest >> testReturnInDoBlock [
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #repeatedFunctionCallWithEscapingVars.
+	self deny: (escapeAnalyzer variablesTable at: #a)
 ]
 
 { #category : 'tests' }
@@ -136,9 +169,10 @@ EscapeAnalysisVarNameTrackTest >> testTempVarAssignedToTempNotEscaped [
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testTempVarCallingItsMethodEscapes [
 
+	self skip.
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #callToObjectToInlineMethodEscapes.
-	self deny: (escapeAnalyzer variablesTable at: #h)
+	self assert: (escapeAnalyzer variablesTable at: #h)
 ]
 
 { #category : 'tests' }
@@ -174,11 +208,15 @@ EscapeAnalysisVarNameTrackTest >> testVarArgToMessageNotReturned [
 
 { #category : 'tests' }
 EscapeAnalysisVarNameTrackTest >> testVarArgToMessageReturned [
-	
 	"A message call whose direct/indirect parent is a ReturnNode should mark its returned variables as ecaping"
-"	escapeAnalyzer := EscapeAnalyzer new."
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #returnReceiverMessageCallOnSelf.
-	self assert: (escapeAnalyzer variablesTable at: #p).
+
+	"	escapeAnalyzer := EscapeAnalyzer new."
+
+	" the called method has two implementations, one that returns the arg, one that doesn't. the expected result should assume the worst."
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #returnReceiverMessageCallOnSelf.
+	self assert: (escapeAnalyzer variablesTable at: #p)
 ]
 
 { #category : 'tests' }

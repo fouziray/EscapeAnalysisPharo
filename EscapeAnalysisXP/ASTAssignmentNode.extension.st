@@ -1,6 +1,55 @@
 Extension { #name : 'ASTAssignmentNode' }
 
 { #category : '*EscapeAnalysisXP' }
+ASTAssignmentNode >> escapeAnalyzeNode: escapeAnalyzer [
+
+	(escapeAnalyzer
+		 isTrackedNode: self value
+		 )
+		ifFalse: [
+			| nameOfReturnedVar |
+			nameOfReturnedVar := self value
+				                     escapeAnalyzeNode: escapeAnalyzer
+				                     .
+
+			(self value isBlock and: [
+				 escapeAnalyzer
+					 isTrackedNode: self value]) ifTrue: [ "(trackedVariablesTable includesKey: self value asString ) ifTrue: [
+					trackedVariablesTable
+						at: self variable name
+						put: nameOfReturnedVar ]"
+					|variableNode|
+					(  variableNode:= escapeAnalyzer findVariableByName: self variable  ) ifNil: [  
+					variableNode := escapeAnalyzer trackVariable: self variable name.].
+					variableNode addReferenceToTrackedVariable: (escapeAnalyzer findVariableByName: self value ).
+					 ] ]
+		ifTrue: [
+			({ #isClassVariable. #isGlobalVariable. #isInstanceVariable }
+				 asOrderedCollection anySatisfy: [ :e | self variable perform: e ])
+				ifTrue: [
+					escapeAnalyzer
+						markVariableAsEscaped: self value.
+					^ self ] ]
+]
+
+{ #category : '*EscapeAnalysisXP' }
+ASTAssignmentNode >> treatNode2: escapeAnalyzer [
+
+	(escapeAnalyzer isTrackedNode: self value)
+		ifFalse: [ self value treatNode: escapeAnalyzer ]
+		ifTrue: [
+			self variable isClassVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self value.
+				^ self ].
+			self variable isInstanceVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self value.
+				^ self ].
+			self variable isGlobalVariable ifTrue: [
+				escapeAnalyzer markVariableAsEscaped: self value.
+				^ self ] ]
+]
+
+{ #category : '*EscapeAnalysisXP' }
 ASTAssignmentNode >> treatNode: escapeAnalyzer [
 
 	(escapeAnalyzer isTrackedNode: self value)

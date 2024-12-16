@@ -7,8 +7,9 @@ Class {
 		'y1',
 		'y2'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-Fixture',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'Fixture'
 }
 
 { #category : 'as yet unclassified' }

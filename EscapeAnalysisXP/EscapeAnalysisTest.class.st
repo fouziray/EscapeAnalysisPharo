@@ -4,21 +4,22 @@ Class {
 	#instVars : [
 		'escapeAnalyzer'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-OldTests',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'OldTests'
 }
 
 { #category : 'running' }
 EscapeAnalysisTest >> setUp [
 
 	super setUp.
-	escapeAnalyzer := EscapeAnalyzer new
+	escapeAnalyzer := EscapeAnalyzer1 new
 ]
 
 { #category : 'tests' }
 EscapeAnalysisTest >> test2ReturnedTempVarEscapedWithDifferentArgName [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
 	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
@@ -26,7 +27,7 @@ EscapeAnalysisTest >> test2ReturnedTempVarEscapedWithDifferentArgName [
 { #category : 'tests' }
 EscapeAnalysisTest >> testArgBlockReturnsTemp [
  
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
 	self assert: (escapeAnalyzer variablesTable at: #tempo).
 	
@@ -35,7 +36,7 @@ EscapeAnalysisTest >> testArgBlockReturnsTemp [
 { #category : 'tests' }
 EscapeAnalysisTest >> testMethod [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #method.
 	self assert: (escapeAnalyzer variablesTable at: #a)
 ]
@@ -57,7 +58,7 @@ EscapeAnalysisTest >> testReturnTempInBlock [
 { #category : 'tests' }
 EscapeAnalysisTest >> testReturnedTempVarEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #foo:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self assert: (escapeAnalyzer variablesTable at: #line)
@@ -66,7 +67,7 @@ EscapeAnalysisTest >> testReturnedTempVarEscaped [
 { #category : 'tests' }
 EscapeAnalysisTest >> testReturnedTempVarEscapedWithDifferentArgName [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgName.
 	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
@@ -74,7 +75,7 @@ EscapeAnalysisTest >> testReturnedTempVarEscapedWithDifferentArgName [
 { #category : 'tests' }
 EscapeAnalysisTest >> testReturnedTempVarEscapedWithDifferentArgNameTwoLevelIndirection [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #callMethodWithDifferentArgNameTwoLevelIndirection.
 	self assert: (escapeAnalyzer variablesTable at: #h).
 ]
@@ -89,7 +90,7 @@ EscapeAnalysisTest >> testTempInBlock [
 { #category : 'tests' }
 EscapeAnalysisTest >> testTempVarAssignedToGlobalEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToGlobal.
 	self assert: (escapeAnalyzer variablesTable at: #h)
 ]
@@ -97,7 +98,7 @@ EscapeAnalysisTest >> testTempVarAssignedToGlobalEscaped [
 { #category : 'tests' }
 EscapeAnalysisTest >> testTempVarAssignedToInstEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToInstance.
 	self assert: (escapeAnalyzer variablesTable at: #h)
 ]
@@ -105,7 +106,7 @@ EscapeAnalysisTest >> testTempVarAssignedToInstEscaped [
 { #category : 'tests' }
 EscapeAnalysisTest >> testTempVarAssignedToTempNotEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooSetToTemp.
 	self deny: (escapeAnalyzer variablesTable at: #h)
 ]
@@ -120,7 +121,7 @@ EscapeAnalysisTest >> testTempVarPassedAsArgNotEscaped [
 { #category : 'tests' }
 EscapeAnalysisTest >> testTempVarsNotEscaped [
 
-	escapeAnalyzer := EscapeAnalyzer new.
+	escapeAnalyzer := EscapeAnalyzer1 new.
 	escapeAnalyzer analyze: FixtureEscapeAnalysis >> #fooNotReturn:.
 	self deny: (escapeAnalyzer variablesTable at: #point1).
 	self deny: (escapeAnalyzer variablesTable at: #line)

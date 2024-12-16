@@ -18,7 +18,9 @@ Class {
 		'methodCallerStack',
 		'followReturnedValue',
 		'workListReturnStatus',
-		'next'
+		'next',
+		'currentTrackedVars',
+		'treatedMethodsEscapeHistory'
 	],
 	#category : 'EscapeAnalysisXP',
 	#package : 'EscapeAnalysisXP'
@@ -80,6 +82,13 @@ EscapeAnalyzer >> analyzeMethod: aMethod withTrackedVariables: aTrackedVariables
 ]
 
 { #category : 'as yet unclassified' }
+EscapeAnalyzer >> applyEscapeHistoryOf: aMethodName on: aVariablesTable [
+
+	(treatedMethodsEscapeHistory at: aMethodName) associationsDo: [ :var |
+		self markEscaped: var key inTable: aVariablesTable ]
+]
+
+{ #category : 'as yet unclassified' }
 EscapeAnalyzer >> checkNode: anASTNode trackedIn: aTable [
 
 	anASTNode isVariable ifFalse: [
@@ -115,12 +124,18 @@ EscapeAnalyzer >> currentMethodReturnStatus [
 	^ workListReturnStatus removeFirst
 ]
 
+{ #category : 'accessing' }
+EscapeAnalyzer >> currentTrackedVars [
+
+	^ currentTrackedVars
+]
+
 { #category : 'testing' }
 EscapeAnalyzer >> escapeAnalyze: method [
 
-	| tempVariables currentTrackVarsTable treatedMethodsNotToLoopBackTO |
+	| tempVariables currentTrackVarsTable treatedMethodsNotToLoopBackTO saveTrackingHistory |
 	tempVariables := method ast body temporaryVariables.
-	
+
 	"tempVariables:= tempVariables collect: [ :tempVar | method classBinding name ,'_', method selector, '_', tempVar ]."
 	topLevel := true.
 	variablesTable := Dictionary
@@ -135,18 +150,41 @@ EscapeAnalyzer >> escapeAnalyze: method [
 	currentTrackVarsTable := variablesTable.
 	[ workList isNotEmpty ] whileTrue: [ "	topLevel ifTrue:[ self setReturnedFlag: true ]. "
 		next := workList removeFirst.
-		(treatedMethodsNotToLoopBackTO includes: next name) ifFalse: [ " these two conditions are significantly increasing analysis duration"
-			treatedMethodsNotToLoopBackTO add: next name.
-			trackingTablesList ifNotEmpty: [ " this one too "
-				currentTrackVarsTable := trackingTablesList removeFirst ].
+		(treatedMethodsNotToLoopBackTO includes: next name)
+			ifFalse: [ " these two conditions are significantly increasing analysis duration"
+				treatedMethodsNotToLoopBackTO add: next name.
+				trackingTablesList ifNotEmpty: [ " this one too "
+					currentTrackVarsTable := trackingTablesList removeFirst ].
 
-			
-			self
-				analyzeMethod: next
-				withTrackedVariables: currentTrackVarsTable.
-			topLevel := false ] ].
 
+				self
+					analyzeMethod: next
+					withTrackedVariables: currentTrackVarsTable.
+
+				self saveHistoryOfEscapedArgsOf: next from: variablesTable.
+				topLevel := false ]
+			ifTrue: [ self applyEscapeHistoryOf: next name on: variablesTable ] ].
 	variablesTable := currentTrackVarsTable
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> fullnames: namesCol in: aMethod [
+
+	^ namesCol collect: [ :name |
+		  aMethod classBinding name , '_' , aMethod selector , '_' , name ]
+]
+
+{ #category : 'initialization' }
+EscapeAnalyzer >> initialize [
+
+	currentTrackedVars := OrderedCollection new.
+	treatedMethodsEscapeHistory := Dictionary new
+]
+
+{ #category : 'testing' }
+EscapeAnalyzer >> isAtTopLevel [
+
+	^ topLevel
 ]
 
 { #category : 'testing' }
@@ -198,6 +236,15 @@ EscapeAnalyzer >> markVariableAsEscaped: aVariableNode [
 	variablesTable at: aVariableNode name put: true
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> saveHistoryOfEscapedArgsOf: aMethod from: aVarTable [
+
+	treatedMethodsEscapeHistory
+		at: aMethod name
+		put: (aVarTable associationsSelect: [ :each |
+				 (aMethod argumentNames includes: each key) and: [ self unwrapVarPointersOf: each key fromTable: aVarTable ] ])
+]
+
 { #category : 'initialization' }
 EscapeAnalyzer >> setReturnedFlag: aBoolean [
 
@@ -208,6 +255,27 @@ EscapeAnalyzer >> setReturnedFlag: aBoolean [
 EscapeAnalyzer >> setWorkListReturnStatus: aCollection [
 
 	workListReturnStatus := aCollection
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzer >> unwrapVarPointersOf: aVariableName fromTable: trackedVariablesTable [
+
+	| unwrapVariableName |
+	unwrapVariableName := aVariableName shallowCopy.
+	[
+	(trackedVariablesTable at: unwrapVariableName ifAbsent: [  ])
+		isSymbol
+	| (trackedVariablesTable at: unwrapVariableName ifAbsent: [  ])
+			isCollection ] whileTrue: [
+		(trackedVariablesTable at: unwrapVariableName) isString not ifTrue: [
+			(trackedVariablesTable at: unwrapVariableName) do: [ :each |
+				(self unwrapVarPointersOf: each fromTable: trackedVariablesTable)
+					ifTrue: [ ^ true ] ].
+			^ false ].
+
+		unwrapVariableName := trackedVariablesTable at: unwrapVariableName ].
+
+	^ trackedVariablesTable at: unwrapVariableName
 ]
 
 { #category : 'as yet unclassified' }

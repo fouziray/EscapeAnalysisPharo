@@ -34,6 +34,14 @@ MockClass >> aMethodUsesSelfInBLockMessage [
 ]
 
 { #category : 'as yet unclassified' }
+MockClass >> methodWithReturnSelf [
+
+	| tmp |
+	tmp := 1.
+	^ tmp
+]
+
+{ #category : 'as yet unclassified' }
 MockClass >> returnBlockWithVariable: tmp [
 
 
@@ -43,6 +51,15 @@ MockClass >> returnBlockWithVariable: tmp [
 		tmp.
 		  ].
 
+]
+
+{ #category : 'as yet unclassified' }
+MockClass >> returnReceiverMessageCallOnSelf [
+
+	| p |
+	"p:= Point new."
+	p := FixtureEscapeAnalysis new.
+	p methodWithReturnSelf
 ]
 
 { #category : 'as yet unclassified' }
