@@ -39,6 +39,26 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
 ]
 
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors andCallSiteNodes: nodes [
+
+	1 to: implementors size do: [ :i |
+		| newMessageContext newMethodArguments |
+		newMessageContext := EAMethodContext new escapeAnalysisContext:
+			                     escapeAnalyzer context.
+		newMessageContext returnStatus: returnStateOfMessage.
+		escapeAnalyzer extendCtxList: newMessageContext.
+		newMethodArguments := (implementors at: i) argumentNames asOrderedCollection.
+		newMethodArguments addFirst: #self.
+		newMethodArguments doWithIndex: [ :argName :index |
+			| newTrackedVariable |
+			newTrackedVariable := newMessageContext trackVariable: argName.
+			(escapeAnalyzer isTrackedNode: (nodes at: index)) ifTrue: [
+				newTrackedVariable referencesTV:
+					(escapeAnalyzer findVariableByName: (nodes at: index)) ] ].
+		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
+]
+
 { #category : 'adding' }
 EscapeAnalyzerVisitor >> addCurrentMethodReturnStatus: aBoolean [
 
@@ -111,26 +131,26 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	tempVariables := method ast body temporaryVariables.
 
 	topLevel := true.
-	variablesTable := context trackVariables: method ast body temporaryNames.
+	variablesTable := context trackVariables:
+		                  method ast body temporaryNames.
 	workList := context extendWorkinglist: method.
 	self addCurrentMethodReturnStatus: true.
-	trackingTablesList := context appendTrackedVariablesTable: variablesTable shallowCopy.
+	trackingTablesList := context appendTrackedVariablesTable:
+		                      variablesTable shallowCopy.
 	currentTrackVarsTable := variablesTable.
-	
-	[ (next := context nextMethod) isNotNil ] 
-		whileTrue: [ 
-		(self isMethodTreated: next)
-			ifTrue: [ " Restitute the history of the analysis, apply the escaping tag to variables corresponding to that"
-				 ]
-			ifFalse: [ " these two conditions are significantly increasing analysis duration"
-				trackingTablesList ifNotEmpty: [ " this one too "
-					currentTrackVarsTable := trackingTablesList removeFirst.
-					self context: ctxList removeFirst.
-					 ].
-				self analyzeMethod: next.
-				topLevel := false ] ].
 
-	variablesTable := currentTrackVarsTable
+	[
+	self context isNotNil and: [ (next := context nextMethod) isNotNil ] ]
+		whileTrue: [
+			(self isMethodTreated: next)
+				ifTrue: [ " Restitute the history of the analysis, apply the escaping tag to variables corresponding to that"
+					 ]
+				ifFalse: [ " these two conditions are significantly increasing analysis duration"
+					
+					self context: self removeFirstCtx.
+					self analyzeMethod: next.
+
+					topLevel := false ] ]
 ]
 
 { #category : 'analyse' }
@@ -220,7 +240,15 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 			aVariable markEscaped.
 			^ true ].
 	" in case the variable is not defined define it"
-	1 halt
+
+]
+
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> removeFirstCtx [
+
+	ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
+
+	^ nil
 ]
 
 { #category : 'initialization' }
@@ -325,14 +353,14 @@ then whenever a variable is escaped this must bubble up until the returned varia
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
-	| implementors nodesToTreat listOfNewTrackedVariableTables |
+	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
 	implementors := aMessageNode selector implementors.
 	listOfNewTrackedVariableTables := OrderedCollection new.
-
-	(nodesToTreat anySatisfy: [ :e |
-		 (self findVariableByName: e) isNotNil ]) ifTrue: [
+	followTheseNodes := nodesToTreat select: [ :e |
+		                    (self findVariableByName: e) isNotNil ].
+	followTheseNodes isNotEmpty ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [
 				(self shouldConsiderImplementors: implementors)
@@ -341,13 +369,16 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 						returnStateOfMessage := false.
 
 						((aMessageNode allParents anySatisfy: #isReturn) and: [
-							 self isAtTopLevel ]) ifTrue: [
-							self setReturnedFlag: true.
-							returnStateOfMessage := self currentMethodReturnStatus ].
+							 self isAtTopLevel ])
+							ifTrue: [
+								self setReturnedFlag: true.
+								returnStateOfMessage := self currentMethodReturnStatus ]
+							ifFalse: [ self currentMethodReturnStatus ].
 						self
 							addContext: returnStateOfMessage
 							to: self
-							forImplementors: implementors.
+							forImplementors: implementors
+							andCallSiteNodes: nodesToTreat .
 
 						listOfNewTrackedVariableTables do: [ :trackedVarTable |
 							self addTrackingTableForElements: trackedVarTable ].
@@ -358,7 +389,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							self markVariableAsEscaped: node ] ] ]
 			ifTrue: [
 				aMessageNode selector = #value ifTrue: [
-					self markVariableAsEscaped: aMessageNode receiver name ] ] ].
+					self markVariableAsEscaped: aMessageNode receiver  ] ] ].
 
 	aMessageNode children do: [ :node | node acceptVisitor: self ]
 ]
