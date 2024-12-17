@@ -21,7 +21,8 @@ Class {
 		'currentTrackedVars',
 		'context',
 		'ctxList',
-		'savedFirstCtxRef'
+		'savedFirstCtxRef',
+		'eaHistory'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -43,7 +44,8 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors andCallSiteNodes: nodes [
 
 	1 to: implementors size do: [ :i |
-		| newMessageContext newMethodArguments |
+		| newMessageContext newMethodArguments newMethodArgumentsNodes |
+		newMethodArgumentsNodes:= OrderedCollection new.
 		newMessageContext := EAMethodContext new escapeAnalysisContext:
 			                     escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
@@ -55,8 +57,11 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 			newTrackedVariable := newMessageContext trackVariable: argName.
 			(escapeAnalyzer isTrackedNode: (nodes at: index)) ifTrue: [
 				newTrackedVariable referencesTV:
-					(escapeAnalyzer findVariableByName: (nodes at: index)) ] ].
-		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
+					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
+				newMethodArgumentsNodes add:  newTrackedVariable].
+		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage.
+		self retrieveHistoryOf: (implementors at: i) given: newMethodArgumentsNodes.
+		 ]
 ]
 
 { #category : 'adding' }
@@ -134,7 +139,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	variablesTable := context trackVariables:
 		                  method ast body temporaryNames.
 	workList := context extendWorkinglist: method.
-	self addCurrentMethodReturnStatus: true.
+	"	self addCurrentMethodReturnStatus: true."
 	trackingTablesList := context appendTrackedVariablesTable:
 		                      variablesTable shallowCopy.
 	currentTrackVarsTable := variablesTable.
@@ -146,10 +151,10 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 				ifTrue: [ " Restitute the history of the analysis, apply the escaping tag to variables corresponding to that"
 					 ]
 				ifFalse: [ " these two conditions are significantly increasing analysis duration"
-					
 					self context: self removeFirstCtx.
 					self analyzeMethod: next.
-
+					eaHistory addHistory: self context for: next.
+					" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 					topLevel := false ] ]
 ]
 
@@ -189,7 +194,11 @@ EscapeAnalyzerVisitor >> initialize [
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
-	trackVariableNameChanges := Dictionary new
+	trackVariableNameChanges := Dictionary new.
+	self setWorkListReturnStatus: OrderedCollection new.
+	self setReturnedFlag: false.
+	self addCurrentMethodReturnStatus: true.
+	eaHistory := EscapeAnalysisHistory new
 ]
 
 { #category : 'testing' }
@@ -249,6 +258,14 @@ EscapeAnalyzerVisitor >> removeFirstCtx [
 	ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
 
 	^ nil
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
+
+	^ eaHistory
+		  adjudicateHistoryRetrievalOf: aCompiledMethod
+		  givenCurrentArguments: argNames
 ]
 
 { #category : 'initialization' }

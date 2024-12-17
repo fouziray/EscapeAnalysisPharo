@@ -8,7 +8,8 @@ Class {
 		'currentTrackedVars',
 		'next',
 		'workingList',
-		'workingListIndex'
+		'workingListIndex',
+		'associatedMethod'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -26,6 +27,18 @@ EscapeAnalysisContext >> appendTrackedVariablesTable: aTrackedVariablesTable [
 
 	trackedVariablesTable add: aTrackedVariablesTable.
 	^ trackedVariablesTable
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> associatedMethod [
+
+	^ associatedMethod
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> associatedMethod: aCompiledMethod [
+
+	associatedMethod := aCompiledMethod
 ]
 
 { #category : 'accessing' }
@@ -117,6 +130,12 @@ EscapeAnalysisContext >> trackVariables: aCollectionOfTrackedVariableNames [
 
 	aCollectionOfTrackedVariableNames do: [ :singleVariableName |
 		self trackVariable: singleVariableName ].
+	^ currentTrackedVars
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> trackedMethodArgs [
+
 	^ currentTrackedVars
 ]
 
