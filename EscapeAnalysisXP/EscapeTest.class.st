@@ -214,9 +214,11 @@ EscapeTest >> testTempVarAssignedToTempNotEscaped [
 { #category : 'tests' }
 EscapeTest >> testTempVarCallingItsMethodEscapes [
 
+	self flag: #PassingVarToObjectCreation.
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #callToObjectToInlineMethodEscapes.
-	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
 { #category : 'tests' }

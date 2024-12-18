@@ -20,20 +20,23 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
-	escapeAnalyzer setWorkListReturnStatus: OrderedCollection new.
 	objectInlineCandidates := OrderedCollection new
 ]
 
 { #category : 'as yet unclassified' }
-ObjectInlining >> lookForNewStatementsNotEscaped: aMethod [
+ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 
+	| methodAssignmentNodes |
 	self initialize.
 	escapeAnalyzer escapeAnalyze: aMethod.
-	escapeAnalyzer variablesTable keysAndValuesDo: [ :key :value |
-		(value isMemberOf: False) ifTrue: [
-			aMethod ast body assignmentNodes do: [ :node |
-				((node references: key) and: [ node value isMessage ]) ifTrue: [
-					node value selector = #new ifTrue: [ self addOIcandidate: node ] ] ] ] ]
+	methodAssignmentNodes := aMethod ast body assignmentNodes.
+	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
+		methodAssignmentNodes do: [ :assignemntNode |
+			((assignemntNode references: nonEscapingNode name) and: [
+				 assignemntNode value isMessage
+	ifTrue: [ assignemntNode value selector = #new ]
+	ifFalse: [ false ] ]) ifTrue: [
+				self addOIcandidate: assignemntNode ] ] ]
 ]
 
 { #category : 'parsing' }
@@ -55,9 +58,10 @@ ObjectInlining >> parseAllMethodsInPackage [
 		           e selector
 		           = #callMethodWithDifferentArgNameTwoLevelIndirection or:
 			           (e selector = #foo: or: e selector = #fooCandidateIO:) ].
+
 	methods := FixtureEscapeAnalysis methods.
 	methods do: [ :m |
-		self lookForNewStatementsNotEscaped: m.
+		self lookForNonEscapingNewStatements: m.
 		dictionaryOIcandidatesPerMethod at: m put: objectInlineCandidates.
 		objectInlineCandidates := OrderedCollection new ].
 

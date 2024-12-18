@@ -17,7 +17,6 @@ Class {
 		'topLevel',
 		'methodCallerStack',
 		'followReturnedValue',
-		'workListReturnStatus',
 		'currentTrackedVars',
 		'context',
 		'ctxList',
@@ -35,10 +34,10 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 
 	implementors size timesRepeat: [
 		| newMessageContext |
-		newMessageContext := EAMethodContext new escapeAnalysisContext: escapeAnalyzer context.
+		newMessageContext := EAMethodContext new escapeAnalysisContext:
+			                     escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
-		escapeAnalyzer extendCtxList: newMessageContext.
-		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage ]
+		escapeAnalyzer extendCtxList: newMessageContext ]
 ]
 
 { #category : 'visiting' }
@@ -62,16 +61,9 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 				newTrackedVariable referencesTV:
 					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
 			newMethodArgumentsNodes add: newTrackedVariable ].
-		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage.
 		self
 			retrieveHistoryOf: (implementors at: i)
 			given: newMethodArgumentsNodes ]
-]
-
-{ #category : 'adding' }
-EscapeAnalyzerVisitor >> addCurrentMethodReturnStatus: aBoolean [
-
-	workListReturnStatus add: aBoolean
 ]
 
 { #category : 'adding' }
@@ -133,12 +125,6 @@ EscapeAnalyzerVisitor >> currentMethodIsReturned [
 	^ currentMethodIsReturned ifNil:[ false ]
 ]
 
-{ #category : 'adding' }
-EscapeAnalyzerVisitor >> currentMethodReturnStatus [
-	self flag: #ChangeNamePlease.
-	^ workListReturnStatus removeFirst
-]
-
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> currentTrackedVars [
 
@@ -197,6 +183,14 @@ EscapeAnalyzerVisitor >> findVariableByNameSymbol: aVariableName [
 	^ context findVariableByName: aVariableName
 ]
 
+{ #category : 'testing' }
+EscapeAnalyzerVisitor >> getNonEscapingVariables [
+
+
+
+	^ savedFirstCtxRef trackedMethodArgs  select: [ :e | e escapeStatus not ].
+]
+
 { #category : 'queries' }
 EscapeAnalyzerVisitor >> getTrackVariableNames [
 
@@ -208,13 +202,12 @@ EscapeAnalyzerVisitor >> initialize [
 
 	context := EscapeAnalysisContext new.
 	context analysisDepth: 1.
+	context returnStatus: true.
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
 	trackVariableNameChanges := Dictionary new.
-	self setWorkListReturnStatus: OrderedCollection new.
 	self setReturnedFlag: false.
-	self addCurrentMethodReturnStatus: true.
 	eaHistory := EscapeAnalysisHistory new.
 	allowedDepth := 3
 ]
@@ -289,12 +282,6 @@ EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
 EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 
 	currentMethodIsReturned := aBoolean
-]
-
-{ #category : 'accessing' }
-EscapeAnalyzerVisitor >> setWorkListReturnStatus: aCollection [
-
-	workListReturnStatus := aCollection
 ]
 
 { #category : 'visiting' }
@@ -407,11 +394,10 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 						returnStateOfMessage := false.
 
 						((aMessageNode allParents anySatisfy: #isReturn) and: [
-							 self isAtTopLevel ])
-							ifTrue: [
-								self setReturnedFlag: true.
-								returnStateOfMessage := self currentMethodReturnStatus ]
-							ifFalse: [ self currentMethodReturnStatus ].
+							 self isAtTopLevel ]) ifTrue: [
+							self setReturnedFlag: true.
+							returnStateOfMessage := context returnStatus ].
+
 						self
 							addContext: returnStateOfMessage
 							to: self

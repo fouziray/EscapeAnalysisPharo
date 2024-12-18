@@ -1,10 +1,6 @@
 Class {
 	#name : 'EAMethodContext',
 	#superclass : 'EscapeAnalysisContext',
-	#instVars : [
-		'eaContext',
-		'returnStatus'
-	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
 	#tag : 'Core'
@@ -50,18 +46,6 @@ EAMethodContext >> findVariableByName: aName [
 EAMethodContext >> nextMethod [
 
 	^ eaContext nextMethod
-]
-
-{ #category : 'accessing' }
-EAMethodContext >> returnStatus [
-
-	^ returnStatus
-]
-
-{ #category : 'accessing' }
-EAMethodContext >> returnStatus: aBoolean [
-
-	^ returnStatus := aBoolean
 ]
 
 { #category : 'accessing' }

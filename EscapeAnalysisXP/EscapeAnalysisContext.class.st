@@ -10,7 +10,9 @@ Class {
 		'workingList',
 		'workingListIndex',
 		'associatedMethod',
-		'analysisDepth'
+		'analysisDepth',
+		'returnStatus',
+		'eaContext'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -114,6 +116,18 @@ EscapeAnalysisContext >> nextMethod [
 		do: [ next := nil ].
 
 	^ next
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> returnStatus [
+
+	^ returnStatus
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> returnStatus: aBoolean [
+
+	^ returnStatus := aBoolean
 ]
 
 { #category : 'accessing' }
