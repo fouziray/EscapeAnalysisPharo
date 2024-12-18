@@ -33,6 +33,14 @@ FixtureEscapeAnalysis >> callMethodWithDifferentArgNameDoesntReturn [
 ]
 
 { #category : 'accessing' }
+FixtureEscapeAnalysis >> callMethodWithDifferentArgNameThreeLevelIndirection [
+
+	| h |
+	h := nil.
+	^ self totoWithDifferentArgNameThreeLevelIndirection: h
+]
+
+{ #category : 'accessing' }
 FixtureEscapeAnalysis >> callMethodWithDifferentArgNameTwoLevelIndirection [
 
 	| h |
@@ -369,9 +377,21 @@ FixtureEscapeAnalysis >> totoWithDifferentArgName: aUniqueName [
 ]
 
 { #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> totoWithDifferentArgNameThreeLevelIndirection: aTopLevelName [
+
+	^ self totoWithDifferentArgNameTwoLevelIndirectionNoEscapes: aTopLevelName
+]
+
+{ #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirection: aName [
 
 	^ self totoWithDifferentArgName: aName
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirectionNoEscapes: aName [
+
+	^ self toto: aName
 ]
 
 { #category : 'nested calls' }

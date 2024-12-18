@@ -9,7 +9,8 @@ Class {
 		'next',
 		'workingList',
 		'workingListIndex',
-		'associatedMethod'
+		'associatedMethod',
+		'analysisDepth'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -20,6 +21,18 @@ Class {
 EscapeAnalysisContext >> TVNames [
 
 	^ currentTrackedVars collect: [ :n | n name ]
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> analysisDepth [
+
+	^ analysisDepth
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> analysisDepth: depth [
+
+	analysisDepth := depth
 ]
 
 { #category : 'accessing' }

@@ -22,7 +22,8 @@ Class {
 		'context',
 		'ctxList',
 		'savedFirstCtxRef',
-		'eaHistory'
+		'eaHistory',
+		'allowedDepth'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -45,12 +46,14 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 
 	1 to: implementors size do: [ :i |
 		| newMessageContext newMethodArguments newMethodArgumentsNodes |
-		newMethodArgumentsNodes:= OrderedCollection new.
+		newMethodArgumentsNodes := OrderedCollection new.
 		newMessageContext := EAMethodContext new escapeAnalysisContext:
 			                     escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
+		newMessageContext analysisDepth: context analysisDepth + 1.
 		escapeAnalyzer extendCtxList: newMessageContext.
-		newMethodArguments := (implementors at: i) argumentNames asOrderedCollection.
+		newMethodArguments := (implementors at: i) argumentNames
+			                      asOrderedCollection.
 		newMethodArguments addFirst: #self.
 		newMethodArguments doWithIndex: [ :argName :index |
 			| newTrackedVariable |
@@ -58,10 +61,11 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 			(escapeAnalyzer isTrackedNode: (nodes at: index)) ifTrue: [
 				newTrackedVariable referencesTV:
 					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
-				newMethodArgumentsNodes add:  newTrackedVariable].
+			newMethodArgumentsNodes add: newTrackedVariable ].
 		escapeAnalyzer addCurrentMethodReturnStatus: returnStateOfMessage.
-		self retrieveHistoryOf: (implementors at: i) given: newMethodArgumentsNodes.
-		 ]
+		self
+			retrieveHistoryOf: (implementors at: i)
+			given: newMethodArgumentsNodes ]
 ]
 
 { #category : 'adding' }
@@ -80,6 +84,18 @@ EscapeAnalyzerVisitor >> addMethodsToWorkList: aMethodCollection [
 EscapeAnalyzerVisitor >> addTrackingTableForElements: aTrackedVariablesTable [
 
 	trackingTablesList add: aTrackedVariablesTable
+]
+
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> allowedDepth [
+
+	^ allowedDepth
+]
+
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> allowedDepth: aDepth [
+
+	allowedDepth := aDepth
 ]
 
 { #category : 'analyse' }
@@ -191,6 +207,7 @@ EscapeAnalyzerVisitor >> getTrackVariableNames [
 EscapeAnalyzerVisitor >> initialize [
 
 	context := EscapeAnalysisContext new.
+	context analysisDepth: 1.
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
@@ -198,7 +215,8 @@ EscapeAnalyzerVisitor >> initialize [
 	self setWorkListReturnStatus: OrderedCollection new.
 	self setReturnedFlag: false.
 	self addCurrentMethodReturnStatus: true.
-	eaHistory := EscapeAnalysisHistory new
+	eaHistory := EscapeAnalysisHistory new.
+	allowedDepth := 3
 ]
 
 { #category : 'testing' }
@@ -282,7 +300,9 @@ EscapeAnalyzerVisitor >> setWorkListReturnStatus: aCollection [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 
-	^ self workList size < 500 and: [ implementors size < 5 ]
+	^ (self workList size < 500 and: [ implementors size < 5 ]) and: [
+	
+		  context analysisDepth < allowedDepth ]
 ]
 
 { #category : 'testing' }

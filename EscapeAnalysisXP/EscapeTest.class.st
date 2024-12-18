@@ -66,6 +66,28 @@ EscapeTest >> testMethod [
 ]
 
 { #category : 'tests' }
+EscapeTest >> testNonReturnedTempVarEscapedThreeLevelIndirectionWithHigherDepth [
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer allowedDepth: 4. " one level deeper "
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
+		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
+	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'tests' }
+EscapeTest >> testNonReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirection [
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
+		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+		
+	
+]
+
+{ #category : 'tests' }
 EscapeTest >> testObjectEscaped [
 
 "	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
@@ -115,6 +137,16 @@ EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameDoesntEscape [
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #callMethodWithDifferentArgNameDoesntReturn.
 	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'tests' }
+EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirection [
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
+		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
 { #category : 'tests' }
