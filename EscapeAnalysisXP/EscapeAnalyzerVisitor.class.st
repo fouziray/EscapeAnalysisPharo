@@ -210,8 +210,7 @@ EscapeAnalyzerVisitor >> isAtTopLevel [
 { #category : 'queries' }
 EscapeAnalyzerVisitor >> isMethodTreated: aMethod [
 
-	^ ((context workingList indexOf: aMethod) < context workingListIndex)
-	not
+	^ eaHistory isImplementorTreated: aMethod
 ]
 
 { #category : 'testing' }
@@ -289,8 +288,9 @@ EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 
+
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
-		^ context trackVariable: aVariableNodeName ].
+		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName
 ]
 
@@ -333,21 +333,19 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 
 	(self isTrackedNode: aNode value)
 		ifFalse: [
-			 self visitNode: aNode value.
+			self visitNode: aNode value.
 
-			(aNode value isBlock and: [
-				 self isTrackedNode: aNode value ]) ifTrue: [ 
-				| variableNode |
-				(variableNode := self findVariableByName: aNode variable)
-					ifNil: [
-					variableNode := self trackVariable: aNode variable name ].
-				variableNode addReferenceToTrackedVariable:
-					(self findVariableByName: aNode value) ] ]
-		ifTrue: [
-			aNode variable isEscaping 
+			(aNode value isBlock and: [ self isTrackedNode: aNode value ])
 				ifTrue: [
-					self markVariableAsEscaped: aNode value.
-					^ aNode ] ]
+					| variableNode |
+					(variableNode := self findVariableByName: aNode variable) ifNil: [
+						variableNode := self trackVariable: aNode variable name ].
+					variableNode addReferenceToTrackedVariable:
+						(self findVariableByName: aNode value) ] ]
+		ifTrue: [
+			aNode variable isEscaping ifTrue: [
+				self markVariableAsEscaped: aNode value.
+				^ aNode ] ]
 ]
 
 { #category : 'visiting' }
@@ -360,11 +358,14 @@ then whenever a variable is escaped this must bubble up until the returned varia
 	"
 
 	| referencedTrackedVariables trackedBlockNode |
-	
-	(referencedTrackedVariables := self getTrackVariableNames select: [  :variable |  aBlockNode references: variable ])
-		ifNotEmpty: [ 
-			trackedBlockNode := self trackVariable: aBlockNode.
-			trackedBlockNode referencesTV: referencedTrackedVariables ]
+	(referencedTrackedVariables := self getTrackVariableNames select: [
+		                               :variable |
+		                               aBlockNode references: variable ])
+		ifNotEmpty: [
+			trackedBlockNode := self trackVariable: aBlockNode .
+			trackedBlockNode referencesTV:
+				(referencedTrackedVariables collect: [ :v |
+					 self findVariableByNameSymbol: v ]) ]
 ]
 
 { #category : 'visiting' }
@@ -395,7 +396,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							addContext: returnStateOfMessage
 							to: self
 							forImplementors: implementors
-							andCallSiteNodes: nodesToTreat .
+							andCallSiteNodes: nodesToTreat.
 
 						listOfNewTrackedVariableTables do: [ :trackedVarTable |
 							self addTrackingTableForElements: trackedVarTable ].
@@ -406,7 +407,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							self markVariableAsEscaped: node ] ] ]
 			ifTrue: [
 				aMessageNode selector = #value ifTrue: [
-					self markVariableAsEscaped: aMessageNode receiver  ] ] ].
+					self markVariableAsEscaped: aMessageNode receiver ] ] ].
 
 	aMessageNode children do: [ :node | node acceptVisitor: self ]
 ]
