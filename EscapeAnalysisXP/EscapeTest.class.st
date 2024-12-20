@@ -79,12 +79,11 @@ EscapeTest >> testNonReturnedTempVarEscapedThreeLevelIndirectionWithHigherDepth 
 EscapeTest >> testNonReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirection [
 	"escapeAnalyzer := EscapeAnalyzer new."
 
+	escapeAnalyzer allowedDepth: 3.
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
 		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
-		
-	
 ]
 
 { #category : 'tests' }
