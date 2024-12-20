@@ -15,7 +15,7 @@ EscapeTest >> setUp [
 
 	super setUp.
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
-	
+	escapeAnalyzer allowedDepth: 6
 ]
 
 { #category : 'tests' }
@@ -69,7 +69,7 @@ EscapeTest >> testMethod [
 EscapeTest >> testNonReturnedTempVarEscapedThreeLevelIndirectionWithHigherDepth [
 	"escapeAnalyzer := EscapeAnalyzer new."
 
-	escapeAnalyzer allowedDepth: 4. " one level deeper "
+	escapeAnalyzer allowedDepth: 6. " one level deeper "
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
 		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
 	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
@@ -252,7 +252,7 @@ EscapeTest >> testVarArgToMessageNotReturned [
 	"A message call whose direct/indirect parent is not a ReturnNode should not mark its returned variables as ecaping"
 
 	"	escapeAnalyzer := EscapeAnalyzer new."
-
+	escapeAnalyzer allowedDepth: 20.
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #noReturnArgumentMessage.
 	self deny: (escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
@@ -280,6 +280,18 @@ EscapeTest >> testcallTwiceReturnOneDifferentVars [
 
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #callTwiceReturnOneDifferentVars.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
+]
+
+{ #category : 'tests' }
+EscapeTest >> testcallTwiceWithDifferentArgStatus [
+	"A message call whose direct/indirect parent is a ReturnNode should mark its returned variables as ecaping"
+
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #callTwiceDiffrentArgs:.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
 ]

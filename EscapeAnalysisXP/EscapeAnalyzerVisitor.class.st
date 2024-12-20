@@ -50,7 +50,8 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 			                     escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
 		newMessageContext analysisDepth: context analysisDepth + 1.
-		escapeAnalyzer extendCtxList: newMessageContext.
+		newMessageContext associatedMethod: (implementors at: i).
+
 		newMethodArguments := (implementors at: i) argumentNames
 			                      asOrderedCollection.
 		newMethodArguments addFirst: #self.
@@ -61,9 +62,14 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 				newTrackedVariable referencesTV:
 					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
 			newMethodArgumentsNodes add: newTrackedVariable ].
-		self
-			retrieveHistoryOf: (implementors at: i)
-			given: newMethodArgumentsNodes ]
+	
+		(self isMethodTreated: (implementors at: i))
+			ifTrue: [
+
+				(self
+					 retrieveHistoryOf: (implementors at: i)
+					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
+			ifFalse: [ escapeAnalyzer extendCtxList: newMessageContext ] ]
 ]
 
 { #category : 'adding' }
@@ -141,23 +147,24 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	variablesTable := context trackVariables:
 		                  method ast body temporaryNames.
 	workList := context extendWorkinglist: method.
+	context associatedMethod: method.
 	"	self addCurrentMethodReturnStatus: true."
 	trackingTablesList := context appendTrackedVariablesTable:
 		                      variablesTable shallowCopy.
 	currentTrackVarsTable := variablesTable.
-
+	self context: self removeFirstCtx.
 	[
-	self context isNotNil and: [ (next := context nextMethod) isNotNil ] ]
-		whileTrue: [
-			(self isMethodTreated: next)
-				ifTrue: [ " Restitute the history of the analysis, apply the escaping tag to variables corresponding to that"
-					 ]
-				ifFalse: [ " these two conditions are significantly increasing analysis duration"
-					self context: self removeFirstCtx.
-					self analyzeMethod: next.
-					eaHistory addHistory: self context for: next.
-					" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
-					topLevel := false ] ]
+	self context isNotNil and: [
+		(next := context currentMethod) isNotNil ] ] whileTrue: [
+		self analyzeMethod: next.
+		eaHistory addHistory: self context for: next.
+		self context: self removeFirstCtx.
+
+		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
+		topLevel := false ].
+
+
+	self context: savedFirstCtxRef
 ]
 
 { #category : 'analyse' }
@@ -206,6 +213,7 @@ EscapeAnalyzerVisitor >> initialize [
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
+
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
 	eaHistory := EscapeAnalysisHistory new.
@@ -247,7 +255,7 @@ EscapeAnalyzerVisitor >> isTrackedTempVariable: anVariableNode [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> isVariableEscaped: aName [
 
-	^ context isVariableEscaped: aName
+	^ savedFirstCtxRef isVariableEscaped: aName
 ]
 
 { #category : 'analyse' }
@@ -255,11 +263,9 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 
 	| aVariable |
 	(aVariable := context findVariableByName: aVariableNode name)
-		ifNotNil: [
+		ifNotNil: [ " in case the variable is not defined define it"
 			aVariable markEscaped.
-			^ true ].
-	" in case the variable is not defined define it"
-
+			^ true ]
 ]
 
 { #category : 'analyse' }
@@ -288,7 +294,6 @@ EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 
 	^ (self workList size < 500 and: [ implementors size < 5 ]) and: [
-	
 		  context analysisDepth < allowedDepth ]
 ]
 

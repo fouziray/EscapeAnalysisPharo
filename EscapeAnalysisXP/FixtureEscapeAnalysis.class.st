@@ -83,6 +83,16 @@ FixtureEscapeAnalysis >> callToObjectToInlineMethodEscapes [
 ]
 
 { #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> callTwiceDiffrentArgs: unknownOutsideArgument [
+
+	| p second |
+	p := Point new.
+	self returnA: unknownOutsideArgument.
+	self returnA: second.
+	^ self returnA: p " the second one which is supposed to mark the p variable as escaped is being ignored"
+]
+
+{ #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> callTwiceReturnOneDifferentVars [
 
 	| p |

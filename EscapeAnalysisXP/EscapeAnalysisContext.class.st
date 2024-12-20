@@ -71,7 +71,7 @@ EscapeAnalysisContext >> currentBlock: aBlockNode [
 { #category : 'as yet unclassified' }
 EscapeAnalysisContext >> currentMethod [
 
-	^ next
+	^ associatedMethod 
 ]
 
 { #category : 'as yet unclassified' }
@@ -87,6 +87,13 @@ EscapeAnalysisContext >> findVariableByName: aName [
 	^ (currentTrackedVars select: [ :v | v name = aName ])
 		  ifNotEmpty: [ :e | ^ e first ]
 		  ifEmpty: [ ^ nil ]
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalysisContext >> globallyDistinctName: aTrackedVariableName [
+
+	^ self currentMethod classBinding name , '_'
+	  , self currentMethod selector , '_' , aTrackedVariableName
 ]
 
 { #category : 'initialization' }

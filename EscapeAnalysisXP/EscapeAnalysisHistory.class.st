@@ -23,7 +23,7 @@ EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurr
 	varNodesNames := aCollectionOfVarNodes collect: [ :varNode |
 		                 varNode name ].
 
-	historyContext := [self restituteContextOf: aCompiledMethod] on: KeyNotFound do:[ :e | ^ false ].
+	historyContext := self restituteContextOf: aCompiledMethod.
 
 	historyVarNames :=  historyContext trackedMethodArgs collect: [ :var | var name ].
 	

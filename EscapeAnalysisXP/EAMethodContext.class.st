@@ -16,12 +16,6 @@ EAMethodContext >> TVNames [
 ]
 
 { #category : 'as yet unclassified' }
-EAMethodContext >> currentMethod [
-
-	^ eaContext currentMethod
-]
-
-{ #category : 'as yet unclassified' }
 EAMethodContext >> escapeAnalysisContext: anEscapeAnalysisContext [
 
 	eaContext := anEscapeAnalysisContext
