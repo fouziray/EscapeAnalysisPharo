@@ -20,6 +20,7 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
+	escapeAnalyzer allowedDepth: 6.
 	objectInlineCandidates := OrderedCollection new
 ]
 
