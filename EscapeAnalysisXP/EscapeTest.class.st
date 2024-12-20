@@ -15,6 +15,9 @@ EscapeTest >> setUp [
 
 	super setUp.
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
+
+	" the default allowed depth is 6 to avoir loops, but could be extended after"
+
 	escapeAnalyzer allowedDepth: 6
 ]
 
@@ -139,16 +142,6 @@ EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameDoesntEscape [
 ]
 
 { #category : 'tests' }
-EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirection [
-	"escapeAnalyzer := EscapeAnalyzer new."
-
-	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
-		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
-	self assert:
-		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
-]
-
-{ #category : 'tests' }
 EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameTwoLevelIndirection [
 	"escapeAnalyzer := EscapeAnalyzer new."
 
@@ -269,6 +262,15 @@ EscapeTest >> testVarArgToMessageReturned [
 		FixtureEscapeAnalysis >> #returnReceiverMessageCallOnSelf.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
+]
+
+{ #category : 'tests' }
+EscapeTest >> testVarEscapedThreeLevelIndirectionNoDepthRestraint [
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
+		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
+	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
 { #category : 'tests' }
