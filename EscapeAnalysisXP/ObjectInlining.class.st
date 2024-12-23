@@ -20,7 +20,7 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
-	escapeAnalyzer allowedDepth: 6.
+	escapeAnalyzer allowedDepth: 1.
 	objectInlineCandidates := OrderedCollection new
 ]
 
@@ -65,6 +65,36 @@ ObjectInlining >> parseAllMethodsInPackage [
 		self lookForNonEscapingNewStatements: m.
 		dictionaryOIcandidatesPerMethod at: m put: objectInlineCandidates.
 		objectInlineCandidates := OrderedCollection new ].
+
+	^ dictionaryOIcandidatesPerMethod
+]
+
+{ #category : 'parsing' }
+ObjectInlining >> parseAllMethodsOfHoneyGinger [
+
+	| packages methods dictionaryOIcandidatesPerMethod |
+	dictionaryOIcandidatesPerMethod := Dictionary new.
+
+	methods := HGSimulator class methods.
+	methods do: [ :m |
+		self lookForNonEscapingNewStatements: m.
+		dictionaryOIcandidatesPerMethod at: m put: objectInlineCandidates.
+		objectInlineCandidates := OrderedCollection new ].
+
+	^ dictionaryOIcandidatesPerMethod
+]
+
+{ #category : 'parsing' }
+ObjectInlining >> parseOneMethodsOfHoneyGinger [
+
+	| packages methods dictionaryOIcandidatesPerMethod |
+	dictionaryOIcandidatesPerMethod := Dictionary new.
+escapeAnalyzer allowedDepth: 50.
+	
+	methods := HGSimulator class >>#steampaint .
+		self lookForNonEscapingNewStatements: methods.
+		dictionaryOIcandidatesPerMethod at: methods put: objectInlineCandidates.
+		objectInlineCandidates := OrderedCollection new .
 
 	^ dictionaryOIcandidatesPerMethod
 ]

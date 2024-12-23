@@ -300,10 +300,9 @@ EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 
-
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
 		^ context trackVariable: aVariableNodeName name ].
-	^ context findVariableByName: aVariableNodeName
+	^ context findVariableByName: aVariableNodeName name
 ]
 
 { #category : 'analyse' }
@@ -374,7 +373,8 @@ then whenever a variable is escaped this must bubble up until the returned varia
 		                               :variable |
 		                               aBlockNode references: variable ])
 		ifNotEmpty: [
-			trackedBlockNode := self trackVariable: aBlockNode .
+			trackedBlockNode := self trackVariable: aBlockNode.
+
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
 					 self findVariableByNameSymbol: v ]) ]

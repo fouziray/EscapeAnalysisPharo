@@ -62,6 +62,15 @@ EscapeTest >> testFindVariableNameShouldNotFindTheVariable [
 ]
 
 { #category : 'tests' }
+EscapeTest >> testHGSteamPaint [
+
+	escapeAnalyzer allowedDepth: 6.
+	escapeAnalyzer escapeAnalyze: HGSimulator class >> #steampaint.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #simulator) escapeStatus
+]
+
+{ #category : 'tests' }
 EscapeTest >> testMethod [
 
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #method.
