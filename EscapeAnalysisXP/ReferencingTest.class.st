@@ -29,5 +29,7 @@ ReferencingTest >> testInlinedCandidateReferences [
 	method := FixtureEscapeAnalysis >> #foo:.
 	candidates := objInliner findCandidatesOf: method.
 	1 halt.
-	objInliner escapeAnalyzer
+	(objInliner escapeAnalyzer currentTrackedVars select: [ :e |
+		 e escapeStatus not ]) do: [ :nonEscapingVar |
+		nonEscapingVar trackedVarsReferencingSelf do: [:tvReferencingNonEscapingVar | objInliner refactorOccurencesOf: tvReferencingNonEscapingVar  ] ]
 ]

@@ -23,7 +23,7 @@ TrackedVariable >> addReferenceToTrackedVariable: aReferencedTrackedVariable [
 { #category : 'accessing' }
 TrackedVariable >> associatedMethod [
 
-	associatedMethod
+	^ associatedMethod
 ]
 
 { #category : 'accessing' }
@@ -93,6 +93,12 @@ TrackedVariable >> referencesTV: aColOfTv [
 		ifFalse: [
 			referencedTrackedVariables add: aColOfTv.
 			aColOfTv referencedByTV: self ]
+]
+
+{ #category : 'as yet unclassified' }
+TrackedVariable >> trackedVarsReferencingSelf [
+
+	^ trackedVarsReferencingSelf
 ]
 
 { #category : 'testing' }

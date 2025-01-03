@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'escapeAnalyzer',
-		'objectInlineCandidates'
+		'objectInlineCandidates',
+		'deoptimizer'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -42,7 +43,8 @@ ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
 	escapeAnalyzer allowedDepth: 8.
-	objectInlineCandidates := OrderedCollection new
+	objectInlineCandidates := OrderedCollection new.
+	deoptimizer := DeoptimizeInlining new
 ]
 
 { #category : 'tests' }
@@ -167,4 +169,47 @@ escapeAnalyzer allowedDepth: 50.
 		objectInlineCandidates := OrderedCollection new .
 
 	^ dictionaryOIcandidatesPerMethod
+]
+
+{ #category : 'tests' }
+ObjectInlining >> refactorCandidateObjectsNames: inliningCandidates in: aCompiledMethod [
+
+	| astClone inlinedObject |
+	astClone := aCompiledMethod ast copy.
+	inliningCandidates do: [ :candidate |
+		(astClone allChildren select: [ :e | e = candidate ]) do: [
+			:aCandidate |
+			aCandidate value isMessage ifTrue: [
+				inlinedObject := aCandidate value receiver ].
+		
+			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
+
+		astClone selector: #inlined , astClone selector ].
+	aCompiledMethod classBinding value  compile: astClone asString
+]
+
+{ #category : 'as yet unclassified' }
+ObjectInlining >> refactorOccurencesOf: trackedVariables [
+
+	| astClone inlinedObject |
+	trackedVariables do: [ :tv |
+		astClone := tv associatedMethod ast copy.
+
+		tv name = #self ifFalse: [
+			self saveOriginalAst: tv associatedMethod.
+			astClone := tv associatedMethod ast copy.
+
+
+			(astClone allChildren select: [ :e | e name = tv name ]) do: [
+				:aCandidate |
+				aCandidate replaceWith: (ASTVariableNode named: 'self').
+				self refactorOccurencesOf: aCandidate trackedVarsReferencingSelf ].
+
+			tv associatedMethod classBinding value compile: astClone asString ] ]
+]
+
+{ #category : 'as yet unclassified' }
+ObjectInlining >> saveOriginalAst: aCompiledMethod [
+
+	deoptimizer saveOriginalAst: aCompiledMethod
 ]
