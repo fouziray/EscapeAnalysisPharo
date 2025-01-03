@@ -154,6 +154,7 @@ EscapeAnalysisContext >> trackVariable: aTrackedVariable [
 
 	| aTrackedVariableNode |
 	aTrackedVariableNode := TrackedVariable new name: aTrackedVariable.
+	aTrackedVariableNode associatedMethod: self associatedMethod.
 	currentTrackedVars add: aTrackedVariableNode.
 
 	^ aTrackedVariableNode

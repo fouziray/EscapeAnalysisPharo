@@ -16,12 +16,62 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 	objectInlineCandidates add: anAssignmentNode .
 ]
 
+{ #category : 'accessing' }
+ObjectInlining >> allowedDepth: aNumber [
+
+	escapeAnalyzer allowedDepth: aNumber
+]
+
+{ #category : 'accessing' }
+ObjectInlining >> escapeAnalyzer [
+
+	^ escapeAnalyzer
+]
+
+{ #category : 'parsing' }
+ObjectInlining >> findCandidatesOf: aMethod [
+
+	| dictionaryOIcandidatesPerMethod |
+	dictionaryOIcandidatesPerMethod := Dictionary new.
+	self lookForNonEscapingNewStatements: aMethod.
+	^ objectInlineCandidates
+]
+
 { #category : 'as yet unclassified' }
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
-	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedDepth: 8.
 	objectInlineCandidates := OrderedCollection new
+]
+
+{ #category : 'tests' }
+ObjectInlining >> inlineCandidateObjects: inliningCandidates in: aCompiledMethod [
+
+	| astClone inlinedObject |
+	astClone := aCompiledMethod ast copy.
+	inliningCandidates do: [ :candidate |
+		(astClone allChildren select: [ :e | e = candidate ]) do: [
+			:aCandidate |
+			aCandidate value isMessage ifTrue: [
+				inlinedObject := aCandidate value receiver ].
+		
+			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
+
+		astClone selector: #inlined , astClone selector ].
+
+	FixtureEscapeAnalysis compile: astClone asString
+]
+
+{ #category : 'testing' }
+ObjectInlining >> isAssignedTwice: aVariableName in: aMethod [
+
+	| precondition |
+	precondition := ReSingleAssignmentCondition new.
+	precondition
+		variableName: aVariableName;
+		definingNode: aMethod ast.
+	^ precondition check
 ]
 
 { #category : 'as yet unclassified' }
@@ -51,6 +101,7 @@ ObjectInlining >> parseAllMethodsInPackage [
 
 	| packages methods dictionaryOIcandidatesPerMethod |
 	dictionaryOIcandidatesPerMethod := Dictionary new.
+	self allowedDepth: 1.
 	packages := PackageOrganizer default packages select: [ :e |
 		            e name = 'EscapeAnalysisXP' ].
 
@@ -61,6 +112,25 @@ ObjectInlining >> parseAllMethodsInPackage [
 			           (e selector = #foo: or: e selector = #fooCandidateIO:) ].
 
 	methods := FixtureEscapeAnalysis methods.
+	methods do: [ :m |
+		self lookForNonEscapingNewStatements: m.
+		dictionaryOIcandidatesPerMethod at: m put: objectInlineCandidates.
+		objectInlineCandidates := OrderedCollection new ].
+
+	^ dictionaryOIcandidatesPerMethod
+]
+
+{ #category : 'parsing' }
+ObjectInlining >> parseAllMethodsInPackage: name [
+
+	| packages methods dictionaryOIcandidatesPerMethod |
+	dictionaryOIcandidatesPerMethod := Dictionary new.
+	self allowedDepth: 1.
+	packages := PackageOrganizer default packages select: [ :e |
+		            e name = name ].
+
+	methods := packages flatCollect: #methods.
+	
 	methods do: [ :m |
 		self lookForNonEscapingNewStatements: m.
 		dictionaryOIcandidatesPerMethod at: m put: objectInlineCandidates.

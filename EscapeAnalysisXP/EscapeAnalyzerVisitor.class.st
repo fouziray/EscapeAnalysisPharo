@@ -78,12 +78,6 @@ EscapeAnalyzerVisitor >> addMethodsToWorkList: aMethodCollection [
 	workList addAll: aMethodCollection
 ]
 
-{ #category : 'adding' }
-EscapeAnalyzerVisitor >> addTrackingTableForElements: aTrackedVariablesTable [
-
-	trackingTablesList add: aTrackedVariablesTable
-]
-
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> allowedDepth [
 
@@ -134,7 +128,7 @@ EscapeAnalyzerVisitor >> currentMethodIsReturned [
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> currentTrackedVars [
 
-	^ currentTrackedVars
+	^ context trackedMethodArgs
 ]
 
 { #category : 'analyse' }
@@ -149,8 +143,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	workList := context extendWorkinglist: method.
 	context associatedMethod: method.
 	"	self addCurrentMethodReturnStatus: true."
-	trackingTablesList := context appendTrackedVariablesTable:
-		                      variablesTable shallowCopy.
+
 	currentTrackVarsTable := variablesTable.
 	self context: self removeFirstCtx.
 	[
@@ -409,8 +402,6 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							forImplementors: implementors
 							andCallSiteNodes: nodesToTreat.
 
-						listOfNewTrackedVariableTables do: [ :trackedVarTable |
-							self addTrackingTableForElements: trackedVarTable ].
 						self addMethodsToWorkList: implementors ]
 					ifFalse: [
 						(nodesToTreat select: [ :n |

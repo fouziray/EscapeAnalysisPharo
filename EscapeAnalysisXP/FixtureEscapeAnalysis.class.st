@@ -16,6 +16,15 @@ FixtureEscapeAnalysis class >> initialize [
 	Smalltalk globals at: #FooGlobalVariable put: nil
 ]
 
+{ #category : 'adding' }
+FixtureEscapeAnalysis >> addEscapingVarToTrackedCollection [
+
+	| trackedCollection escapingVar |
+	trackedCollection := OrderedCollection new.
+	trackedCollection add: escapingVar.
+	^ self returnA: escapingVar
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> callMethodWithDifferentArgName [
 

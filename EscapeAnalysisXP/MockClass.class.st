@@ -42,6 +42,14 @@ MockClass >> methodWithReturnSelf [
 ]
 
 { #category : 'as yet unclassified' }
+MockClass >> newMethod [
+    "This is a new method"
+    | result |
+    result := 42.
+    ^ result
+]
+
+{ #category : 'as yet unclassified' }
 MockClass >> returnBlockWithVariable: tmp [
 
 

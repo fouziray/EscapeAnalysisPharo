@@ -22,6 +22,18 @@ EscapeTest >> setUp [
 ]
 
 { #category : 'tests' }
+EscapeTest >> testAppendEscapingVarToCollection [
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #addEscapingVarToTrackedCollection.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedCollection)
+			escapeStatus.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #escapingVar) escapeStatus
+]
+
+{ #category : 'tests' }
 EscapeTest >> testArgBlockReturnsTemp [
 
 	escapeAnalyzer escapeAnalyze:

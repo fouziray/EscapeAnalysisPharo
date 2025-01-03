@@ -5,7 +5,9 @@ Class {
 		'type',
 		'name',
 		'escapeStatus',
-		'referencedTrackedVariables'
+		'referencedTrackedVariables',
+		'trackedVarsReferencingSelf',
+		'associatedMethod'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -16,6 +18,18 @@ Class {
 TrackedVariable >> addReferenceToTrackedVariable: aReferencedTrackedVariable [
 
 	referencedTrackedVariables add: aReferencedTrackedVariable
+]
+
+{ #category : 'accessing' }
+TrackedVariable >> associatedMethod [
+
+	associatedMethod
+]
+
+{ #category : 'accessing' }
+TrackedVariable >> associatedMethod: aMethod [
+
+	associatedMethod := aMethod
 ]
 
 { #category : 'accessing' }
@@ -40,7 +54,8 @@ TrackedVariable >> hasType [
 TrackedVariable >> initialize [
 
 	escapeStatus := false.
-	referencedTrackedVariables := OrderedCollection new
+	referencedTrackedVariables := OrderedCollection new.
+	trackedVarsReferencingSelf := OrderedCollection new
 ]
 
 { #category : 'accessing' }
@@ -63,11 +78,21 @@ TrackedVariable >> name: aName [
 ]
 
 { #category : 'as yet unclassified' }
+TrackedVariable >> referencedByTV: aTV [
+
+	trackedVarsReferencingSelf add: aTV
+]
+
+{ #category : 'as yet unclassified' }
 TrackedVariable >> referencesTV: aColOfTv [
 
 	aColOfTv isCollection
-		ifTrue: [ referencedTrackedVariables addAll: aColOfTv ]
-		ifFalse: [ referencedTrackedVariables add: aColOfTv ]
+		ifTrue: [
+			referencedTrackedVariables addAll: aColOfTv.
+			aColOfTv do: [ :each | each referencedByTV: self ] ]
+		ifFalse: [
+			referencedTrackedVariables add: aColOfTv.
+			aColOfTv referencedByTV: self ]
 ]
 
 { #category : 'testing' }
