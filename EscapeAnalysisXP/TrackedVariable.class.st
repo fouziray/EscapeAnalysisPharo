@@ -95,6 +95,23 @@ TrackedVariable >> referencesTV: aColOfTv [
 			aColOfTv referencedByTV: self ]
 ]
 
+{ #category : 'accessing' }
+TrackedVariable >> referencesTrackedVariable: aTrackedVariable [
+
+	| doesReference |
+	doesReference := referencedTrackedVariables includes:
+		                 aTrackedVariable.
+	doesReference
+		ifTrue: [ ^ true ]
+		ifFalse: [
+			referencedTrackedVariables do: [ :trackedVar |
+				doesReference ifFalse: [
+					doesReference := trackedVar referencesTrackedVariable:
+						                 aTrackedVariable ] ] ].
+
+	^ doesReference
+]
+
 { #category : 'as yet unclassified' }
 TrackedVariable >> trackedVarsReferencingSelf [
 

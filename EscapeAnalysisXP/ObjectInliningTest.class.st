@@ -4,8 +4,9 @@ Class {
 	#instVars : [
 		'objInliner'
 	],
-	#category : 'EscapeAnalysisXP',
-	#package : 'EscapeAnalysisXP'
+	#category : 'EscapeAnalysisXP-testInlining',
+	#package : 'EscapeAnalysisXP',
+	#tag : 'testInlining'
 }
 
 { #category : 'running' }
@@ -19,13 +20,14 @@ ObjectInliningTest >> setUp [
 { #category : 'tests' }
 ObjectInliningTest >> testInliningObjectPoint [
 
-	| candidates astt compiler method |
+	| candidates astt compiler method candidatesAssociatedWithTV|
 	objInliner allowedDepth: 8.
 	method := FixtureEscapeAnalysis >> #foo:.
 	candidates := objInliner findCandidatesOf: method.
-	objInliner inlineCandidateObjects: candidates in: method.
+	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
+	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: method.
 
-	self assert: candidates first equals: (ASTAssignmentNode
+	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
 			 variable: (ASTVariableNode named: 'point1')
 			 value: (ASTMessageNode
 					  receiver: (ASTVariableNode named: 'PointInlined')

@@ -3,7 +3,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'x',
-		'inst'
+		'inst',
+		'inlined_PointInlined_x',
+		'inlined_PointInlined_y'
 	],
 	#category : 'EscapeAnalysisXP-Tests',
 	#package : 'EscapeAnalysisXP',
@@ -215,6 +217,30 @@ FixtureEscapeAnalysis >> fooSetterToTemp: h [
 	aTemp := h.
 
 	^ aTemp
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlined_PointInlined_pointX [
+
+	^ inlined_PointInlined_x
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlined_PointInlined_pointX: anInteger [
+
+	inlined_PointInlined_x := anInteger
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlined_PointInlined_pointY [
+
+	^ inlined_PointInlined_y
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlined_PointInlined_pointY: anInteger [
+
+	inlined_PointInlined_y := anInteger
 ]
 
 { #category : 'nested calls' }

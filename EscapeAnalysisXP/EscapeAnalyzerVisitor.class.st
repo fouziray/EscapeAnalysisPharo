@@ -197,6 +197,12 @@ EscapeAnalyzerVisitor >> getTrackVariableNames [
 	^ context TVNames
 ]
 
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> history [
+
+	^ eaHistory 
+]
+
 { #category : 'initialization' }
 EscapeAnalyzerVisitor >> initialize [
 
