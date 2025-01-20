@@ -4,11 +4,12 @@ Class {
 	#instVars : [
 		'escapeAnalyzer',
 		'objectInlineCandidates',
-		'deoptimizer'
+		'deoptimizer',
+		'renamingVisitor'
 	],
-	#category : 'EscapeAnalysisXP-Core',
+	#category : 'EscapeAnalysisXP-testInlining',
 	#package : 'EscapeAnalysisXP',
-	#tag : 'Core'
+	#tag : 'testInlining'
 }
 
 { #category : 'adding' }
@@ -17,10 +18,31 @@ ObjectInlining >> addOIcandidate: anAssignmentNode [
 	objectInlineCandidates add: anAssignmentNode .
 ]
 
+{ #category : 'as yet unclassified' }
+ObjectInlining >> allmessagesOf: copyAst havingArg: trackedV [
+
+	^ Set newFrom: (copyAst body allChildren select: [ :e |
+			   | args |
+			   e isMessage
+				   ifTrue: [
+					   args := OrderedCollection withAll: e arguments.
+					   args add: e receiver.
+					   args anySatisfy: [ :e |
+						   e isVariable and: [ e name = trackedV name ] ] ]
+				   ifFalse: [ false ] ])
+]
+
 { #category : 'accessing' }
 ObjectInlining >> allowedDepth: aNumber [
 
 	escapeAnalyzer allowedDepth: aNumber
+]
+
+{ #category : 'as yet unclassified' }
+ObjectInlining >> argsOfContext: contextOfMethod referencing: aTrackedVariable [
+
+	^ contextOfMethod trackedMethodArgs select: [ :argVariable |
+		  argVariable referencesTrackedVariable: aTrackedVariable ]
 ]
 
 { #category : 'accessing' }
@@ -39,36 +61,25 @@ ObjectInlining >> findCandidatesOf: aMethod [
 ]
 
 { #category : 'as yet unclassified' }
+ObjectInlining >> findEnclosingStatementNodeFor: aNode [
+
+	| statementNode sequenceNode |
+	statementNode := aNode.
+
+	[ statementNode parent isSequence not ] whileTrue: [
+		statementNode := statementNode parent ].
+
+	^ statementNode
+]
+
+{ #category : 'as yet unclassified' }
 ObjectInlining >> initialize [
 
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
 	escapeAnalyzer allowedDepth: 8.
 	objectInlineCandidates := OrderedCollection new.
-	deoptimizer := DeoptimizeInlining new
-]
-
-{ #category : 'tests' }
-ObjectInlining >> inlineCandidateObjects: inliningCandidates in: aCompiledMethod [
-
-	| astClone inlinedObject astCloneChildren |
-	astClone := aCompiledMethod ast copy.
-	astCloneChildren := astClone allChildren.
-	inliningCandidates do: [ :candidate |
-		(astCloneChildren select: [ :e | e = candidate ]) do: [ :aCandidate |
-			
-			aCandidate value isMessage ifTrue: [
-				| inlinedObjectClass|
-				inlinedObjectClass := (SmalltalkImage current globals at: inlinedObject value name asSymbol).
-				inlinedObject := aCandidate value receiver.
-				self mergeMethodsOfContainedObjectClass: inlinedObjectClass   inContainer: aCompiledMethod classBinding value .
-				self renameInlinedMessages: inlinedObjectClass in: astClone.
-				 ].
-			
-			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
-
-		astClone selector: #inlined , astClone selector ].
-
-	FixtureEscapeAnalysis compile: astClone asString
+	deoptimizer := DeoptimizeInlining new.
+	renamingVisitor := ASTCodeRefactoringVisitor new.
 ]
 
 { #category : 'tests' }
@@ -83,7 +94,7 @@ ObjectInlining >> inlineRefactorCandidateObjects: inliningCandidates in: aCompil
 			                      candidate key value receiver name.
 		(astCloneChildren select: [ :e | e = candidate key ]) do: [
 			:aCandidate |
-			1 halt.
+
 			aCandidate value isMessage ifTrue: [
 				self
 					mergeMethodsOfContainedObjectClass: inlinedObjectClass
@@ -91,13 +102,29 @@ ObjectInlining >> inlineRefactorCandidateObjects: inliningCandidates in: aCompil
 					tv: candidate value ].
 
 			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
+
 		self
 			renamecallSitesOfAst: astClone
-			withReceiverVariable: candidate value
+			withArgument: candidate value
 			inlinedTo: inlinedObjectClass
-			in: aCompiledMethod classBinding value name  ].
+			in: aCompiledMethod classBinding value  ].
 	astClone selector: #inlined , astClone selector.
+	FixtureEscapeAnalysis compile: astClone asString
 
+]
+
+{ #category : 'tests' }
+ObjectInlining >> inlineRefactorCandidateObjectsUsingVisitor: inliningCandidates in: aCompiledMethod [
+
+	| astClone inlinedObject astCloneChildren |
+	astClone := aCompiledMethod ast copy.
+
+
+	renamingVisitor
+		renamecallSitesOfAst: astClone
+		withArgument: inliningCandidates
+		inside: aCompiledMethod classBinding value.
+	astClone selector: #inlined , astClone selector.
 	FixtureEscapeAnalysis compile: astClone asString
 ]
 
@@ -126,6 +153,46 @@ ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 	ifTrue: [ assignemntNode value selector = #new ]
 	ifFalse: [ false ] ]) ifTrue: [
 				self addOIcandidate: assignemntNode ] ] ]
+]
+
+{ #category : 'as yet unclassified' }
+ObjectInlining >> mergeMethod: singleMethod of: inlinedObject in: containerClass tv: aTrackedVariable [
+
+	| copyAst contextOfMethod rewriter |
+	copyAst := singleMethod ast copy.
+	
+	copyAst selector:
+		#inlined_ , inlinedObject name , #_ , singleMethod selector.
+	copyAst instanceVariableNodes do: [ :instVar |
+		| newInstanceVarName |
+		newInstanceVarName := self
+			                      prefixInlinedObject: inlinedObject name
+			                      to: instVar name.
+	
+		rewriter := ASTParseTreeRewriter new.
+		rewriter replace: instVar name with: newInstanceVarName.
+		rewriter executeTree: copyAst.
+		(containerClass hasInstVarNamed: newInstanceVarName) ifFalse: [
+			containerClass addInstVarNamed: newInstanceVarName ] ].
+	(contextOfMethod := escapeAnalyzer history restituteContextOf:
+		                    singleMethod) isNotNil ifTrue: [
+		(self argsOfContext: contextOfMethod referencing: aTrackedVariable )
+			do: [ :trackedV |
+				"1 haltIf:(( singleMethod== (LineInlined class  >> #p1:p2: )) or:[ singleMethod== (FixtureEscapeAnalysis  >> #inlined_LineInlined_p1:p2:)] )."
+				self renamecallSitesOfAst: copyAst withArgument: trackedV inlinedTo: inlinedObject in: containerClass.
+				 ] ].
+	^ containerClass compile: copyAst newSource
+]
+
+{ #category : 'as yet unclassified' }
+ObjectInlining >> mergeMethods: methods of: inlinedObject in: containerClass tv: aTrackedVariable [
+
+	^ methods do: [ :singleMethod |
+		  self
+			  mergeMethod: singleMethod
+			  of: inlinedObject
+			  in: containerClass
+			  tv: aTrackedVariable ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -158,44 +225,17 @@ ObjectInlining >> mergeMethodsOfContainedObjectClass: inlinedObject inContainer:
 ]
 
 { #category : 'as yet unclassified' }
-ObjectInlining >> mergeMethodsOfContainedObjectClass: inlinedObject inContainer: aCompiledMethod tv: aTrackedVariable [
+ObjectInlining >> mergeMethodsOfContainedObjectClass: inlinedObject inContainer: containerClass tv: aTrackedVariable [
 
-	| containerClass contextOfMethod methods |
-
-	containerClass := aCompiledMethod.
+	|  methods |
+	
 	methods := inlinedObject methods asOrderedCollection.
 	methods addAll: inlinedObject class methods.
-	( methods ) do: [ :singleMethod |
-		| copyAst rewriter contextHistory |
-		copyAst := singleMethod ast copy.
-		copyAst selector:
-			#inlined_ , inlinedObject name , #_ , singleMethod selector.
-
-		copyAst instanceVariableNodes do: [ :instVar |
-			| newInstanceVarName |
-			newInstanceVarName := self
-				                      prefixInlinedObject: inlinedObject name
-				                      to: instVar name.
-			rewriter := RBParseTreeRewriter new.
-			rewriter replace: instVar name with: newInstanceVarName.
-			rewriter executeTree: copyAst.
-			(containerClass hasInstVarNamed: newInstanceVarName) ifFalse: [
-				containerClass addInstVarNamed: newInstanceVarName ] ].
-
-		(contextOfMethod := escapeAnalyzer history restituteContextOf: singleMethod)
-			isNotNil ifTrue: [
-			(contextOfMethod trackedMethodArgs select: [ :argVariable |
-				 argVariable referencesTrackedVariable: aTrackedVariable ]) do: [
-				:trackedV |
-				| messageSendNodes |
-				self
-					renamecallSitesOfAst: copyAst
-					withReceiverVariable: trackedV
-					inlinedTo: inlinedObject 
-					in: containerClass name.
-					] ].
-
-		containerClass compile: copyAst newSource ]
+	self
+		mergeMethods: methods 
+		of:inlinedObject 
+		in: containerClass
+		tv: aTrackedVariable
 ]
 
 { #category : 'parsing' }
@@ -277,7 +317,7 @@ escapeAnalyzer allowedDepth: 50.
 	^ dictionaryOIcandidatesPerMethod
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'renaming' }
 ObjectInlining >> prefixInlinedObject: className to: aName [
 
 	^ #inlined_ , className , #_ , aName
@@ -321,45 +361,90 @@ ObjectInlining >> refactorOccurencesOf: trackedVariables [
 ]
 
 { #category : 'as yet unclassified' }
-ObjectInlining >> renamecallSitesOfAst: copyAst withReceiverVariable: trackedV inlinedTo: inlinedObject [
+ObjectInlining >> renamecallSitesOfAst: copyAst withArgument: trackedV inlinedTo: inlinedObject in: containerClassName [
 
-	^ (Set newFrom: (copyAst body allChildren select: [ :e |
-			    e isMessage and: [ e receiver name = trackedV name ] ])) do: [
+	^ (self allmessagesOf: copyAst havingArg: trackedV) do: [
 		  :messageNode |
-		  | inlinedMessageCall conditionalClassBranch |
-		  1 halt.
+		  | inlinedMessageCall conditionalClassBranch enclosingMessageNode |
+		  enclosingMessageNode := messageNode.
 		  inlinedMessageCall := messageNode copy selector:
 			                        (self
 				                         prefixInlinedObject: inlinedObject name
 				                         to: messageNode selector).
-		  conditionalClassBranch := ASTMessageNode
-			                            receiver: messageNode receiver
-			                            selector: #class.
-		  conditionalClassBranch := ASTMessageNode
-			                            receiver: conditionalClassBranch
-			                            selector: #name.
-		  conditionalClassBranch := ASTMessageNode
-			                            receiver: conditionalClassBranch
-			                            selector: #'=='
-			                            arguments:
-			                            { (ASTLiteralValueNode value:
-				                             inlinedObject name) }.
-		  conditionalClassBranch := ASTMessageNode
-			                            receiver: conditionalClassBranch
-			                            selector: #ifTrue:
-			                            arguments:
-				                            { (ASTBlockNode body:
-					                             (ASTSequenceNode statements:
-						                              (OrderedCollection with:
-							                               inlinedMessageCall))) }.
-		  conditionalClassBranch := ASTMessageNode
-			                            receiver: conditionalClassBranch
-			                            selector: #ifFalse:
-			                            arguments: { (ASTBlockNode body:
-					                             (ASTSequenceNode statements:
-						                              (OrderedCollection with:
-							                               messageNode))) }.
-		  messageNode replaceWith: conditionalClassBranch ]
+		  messageNode receiver isGlobalVariable
+			  ifTrue: [
+				  | otherClassToInline |
+				  otherClassToInline := SmalltalkImage current globals at:
+					                        messageNode receiver name.
+				  conditionalClassBranch := messageNode copy selector: (self
+						                             prefixInlinedObject:
+						                             messageNode receiver name
+						                             to: messageNode selector).
+				  conditionalClassBranch receiver: (ASTVariableNode named: 'self').
+
+				  self
+					  mergeMethod:
+					  (otherClassToInline classSide compiledMethodAt:
+						   messageNode selector)
+					  of: otherClassToInline
+					  in: containerClassName
+					  tv: trackedV.
+				  messageNode parent
+					  replaceNode: messageNode
+					  withNode: conditionalClassBranch ]
+			  ifFalse: [
+				  | enclosingMessageNodeParentCopy rewritingParser |
+				(messageNode receiver name == trackedV name) ifTrue: [ 
+			|possibleRuntimeTypesOfTV|
+			possibleRuntimeTypesOfTV := (containerClassName methods collect: #selector) select: [ :s | (s beginsWith: 'inlined') and: [s endsWith: messageNode selector ]  ].
+			inlinedMessageCall selector: possibleRuntimeTypesOfTV first.
+			].
+		
+				  enclosingMessageNode := self findEnclosingStatementNodeFor:
+					                          messageNode.
+				  enclosingMessageNodeParentCopy := enclosingMessageNode copy.
+				  conditionalClassBranch := ASTMessageNode
+					                            receiver: messageNode receiver
+					                            selector: #class.
+				  conditionalClassBranch := ASTMessageNode
+					                            receiver: conditionalClassBranch
+					                            selector: #name.
+
+
+				  conditionalClassBranch := ASTMessageNode
+					                            receiver: conditionalClassBranch
+					                            selector: #'=='
+					                            arguments:
+					                            { (ASTLiteralValueNode value:
+						                             containerClassName name) }.
+
+				  rewritingParser := ASTParseTreeRewriter new.
+				  rewritingParser
+					  replaceTree: messageNode
+					  withTree: inlinedMessageCall.
+				  rewritingParser executeTree: enclosingMessageNode.
+				  enclosingMessageNode parent
+					  replaceNode: messageNode
+					  withNode: inlinedMessageCall.
+				  conditionalClassBranch := ASTMessageNode
+					                            receiver: conditionalClassBranch
+					                            selector: #ifTrue:ifFalse:
+					                            arguments: (OrderedCollection
+							                             with:
+								                             (ASTBlockNode body:
+									                              (ASTSequenceNode statements:
+										                               (OrderedCollection with:
+											                                enclosingMessageNode)))
+							                             with:
+								                             (ASTBlockNode body:
+									                              (ASTSequenceNode statements:
+										                               (OrderedCollection with:
+											                                enclosingMessageNodeParentCopy)))).
+
+
+				  copyAst body
+					  replaceNode: enclosingMessageNode
+					  withNode: conditionalClassBranch ] ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -398,8 +483,8 @@ ObjectInlining >> renamecallSitesOfAst: copyAst withReceiverVariable: trackedV i
 							                              (ASTSequenceNode statements:
 								                               (OrderedCollection with:
 									                                messageNode)))).
-		  1 halt.
-		  messageNode replaceWith: conditionalClassBranch ]
+		  copyAst body replaceNode: messageNode withNode: conditionalClassBranch.
+		 ]
 ]
 
 { #category : 'as yet unclassified' }

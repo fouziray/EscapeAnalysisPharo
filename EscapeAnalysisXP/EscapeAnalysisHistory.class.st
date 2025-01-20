@@ -58,5 +58,5 @@ EscapeAnalysisHistory >> isImplementorTreated: aCompiledMethod [
 { #category : 'adding' }
 EscapeAnalysisHistory >> restituteContextOf: aCompiledMethod [
 
-	^ history at: aCompiledMethod
+	^ history at: aCompiledMethod ifAbsent: [ ^ nil ]
 ]

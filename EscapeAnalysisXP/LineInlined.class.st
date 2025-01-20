@@ -16,11 +16,11 @@ Class {
 LineInlined class >> p1: point1 p2: point2 [
 
 	| l |
-	l := self new.
+	l := LineInlined new.
 	l lineX1: point1 pointX.
 	l lineY1: point1 pointY.
-	l lineX2: point2 pointX.
-	l lineY2: point2 pointY.
+	l lineX2: point2 x.
+	l lineY2: point2 y.
 	^ l
 ]
 
