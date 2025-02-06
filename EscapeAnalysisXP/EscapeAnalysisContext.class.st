@@ -113,7 +113,7 @@ EscapeAnalysisContext >> isVariableEscaped: aName [
 	^ (self findVariableByName: aName) escapeStatus
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'to remove as soon as possible' }
 EscapeAnalysisContext >> nextMethod [
 
 	[

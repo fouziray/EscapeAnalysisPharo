@@ -15,7 +15,7 @@ EscapeTest >> setUp [
 
 	super setUp.
 	escapeAnalyzer := EscapeAnalyzerVisitor new.
-
+escapeAnalyzer setWorklistLimitation.
 	" the default allowed depth is 6 to avoir loops, but could be extended after"
 
 	escapeAnalyzer allowedDepth: 6
@@ -39,6 +39,26 @@ EscapeTest >> testArgBlockReturnsTemp [
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #usedBlockReturnsTemp.
 	self assert: (escapeAnalyzer isVariableEscaped: #tempo)
+]
+
+{ #category : 'tests' }
+EscapeTest >> testCollectionNonEscapingInAIAstar [
+	"escapeAnalyzer := EscapeAnalyzer new."
+
+	escapeAnalyzer allowedDepth: 300.
+	escapeAnalyzer escapeAnalyze: AIAstar >> #heuristicFrom:to:.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #use) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testComplexWeighterGraph [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		AICyclicWeightedComplexFixture >> #complexWeightedGraph2. 
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
 ]
 
 { #category : 'tests - find variable' }
@@ -312,8 +332,7 @@ EscapeTest >> testcallTwiceWithDifferentArgStatus [
 
 	"escapeAnalyzer := EscapeAnalyzer new."
 
-	escapeAnalyzer escapeAnalyze:
-		FixtureEscapeAnalysis >> #callTwiceDiffrentArgs:.
+	escapeAnalyzer escapeAnalyze:	FixtureEscapeAnalysis >> #callTwiceDiffrentArgs:.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
 ]

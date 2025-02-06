@@ -36,19 +36,19 @@ EAMethodContext >> findVariableByName: aName [
 	^ node
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'to remove as soon as possible' }
 EAMethodContext >> nextMethod [
 
 	^ eaContext nextMethod
 ]
 
-{ #category : 'accessing' }
+{ #category : 'to remove as soon as possible' }
 EAMethodContext >> workingList [
 
 	^ eaContext workingList
 ]
 
-{ #category : 'accessing' }
+{ #category : 'to remove as soon as possible' }
 EAMethodContext >> workingListIndex [
 
 	^ eaContext workingListIndex

@@ -337,6 +337,7 @@ FixtureEscapeAnalysis >> notUsedBlockReturnsTemp [
 FixtureEscapeAnalysis >> notUsedBlockTemp [
 
 	| h tempo |
+	tempo:= Object new.
 	h := [ tempo ].
 	^ self toto: h
 ]
@@ -350,18 +351,18 @@ FixtureEscapeAnalysis >> objectEscaped [
 	^ self tata: y
 ]
 
-{ #category : 'nested calls' }
+{ #category : 'polymorphism' }
 FixtureEscapeAnalysis >> receiverMessage [
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'recursive' }
 FixtureEscapeAnalysis >> recursiveFunction [
 	| temp |
 	temp := FixtureEscapeAnalysis.
 	temp recursiveFunction.
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'recursive' }
 FixtureEscapeAnalysis >> repeatedFunctionCallWithEscapingVars [
 
 	| temp a col |
@@ -371,7 +372,7 @@ FixtureEscapeAnalysis >> repeatedFunctionCallWithEscapingVars [
 	^ self methodCallsMethodWithReturn: a
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'recursive' }
 FixtureEscapeAnalysis >> repetadFunctionCall [
 	| temp |
 	temp:= FixtureEscapeAnalysis new .
@@ -384,7 +385,16 @@ FixtureEscapeAnalysis >> returnA: a [
 	^ a
 ]
 
-{ #category : 'tests' }
+{ #category : 'tests - blocks' }
+FixtureEscapeAnalysis >> returnBlockPassedAsArgument [
+
+	| h tempo |
+	tempo := Object new.
+
+	^ self returnBlockValue: [ ^ tempo ]
+]
+
+{ #category : 'tests - blocks' }
 FixtureEscapeAnalysis >> returnBlockValue: aBlock [
 
 	^ aBlock value
@@ -439,17 +449,27 @@ FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirectionNoEscapes: a
 	^ self toto: aName
 ]
 
-{ #category : 'nested calls' }
+{ #category : 'polymorphism' }
 FixtureEscapeAnalysis >> twoImplementationMethods [
 
 	
 ]
 
-{ #category : 'accessing' }
+{ #category : 'tests - blocks' }
 FixtureEscapeAnalysis >> usedBlockReturnsTemp [
 
 	| h tempo|
 	tempo := Object new.
 	h := [ ^ tempo ]. "non local return"
 	^ self returnBlockValue: h
+]
+
+{ #category : 'tests - blocks' }
+FixtureEscapeAnalysis >> usedBlockReturnsTemp2 [
+
+	| h tempo|
+	tempo := Object new.
+	h := [ ^ tempo ]. "non local return"
+	 h .
+	true.
 ]

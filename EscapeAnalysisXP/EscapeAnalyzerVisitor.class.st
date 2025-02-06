@@ -22,7 +22,8 @@ Class {
 		'ctxList',
 		'savedFirstCtxRef',
 		'eaHistory',
-		'allowedDepth'
+		'allowedDepth',
+		'setWorklistLimitation'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -209,6 +210,7 @@ EscapeAnalyzerVisitor >> initialize [
 	context := EscapeAnalysisContext new.
 	context analysisDepth: 1.
 	context returnStatus: true.
+	setWorklistLimitation := false.
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
@@ -234,7 +236,7 @@ EscapeAnalyzerVisitor >> isMethodTreated: aMethod [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> isSpecialMethod: aMethodSelector [
 
-	^ { 'new'. 'value' } includes: aMethodSelector
+	^ { #new. #value, #shouldNotImplement } includes: aMethodSelector
 ]
 
 { #category : 'testing' }
@@ -289,11 +291,23 @@ EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 	currentMethodIsReturned := aBoolean
 ]
 
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> setWorklistLimitation [
+	"comment stating purpose of instance-side method"
+
+	"scope: class-variables  &  instance-variables"
+
+	setWorklistLimitation := true
+]
+
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 
-	^ (self workList size < 500 and: [ implementors size < 5 ]) and: [
-		  context analysisDepth < allowedDepth ]
+	^ "(self workList size < 3000 ""and: [ implementors size < 5 ]"") and: [
+		  context analysisDepth < allowedDepth ]"
+ setWorklistLimitation	ifTrue: [ (self workList size < 300 ) and: [context analysisDepth < allowedDepth]] ifFalse: [ 
+		(context analysisDepth < allowedDepth ) 
+		]
 ]
 
 { #category : 'testing' }
@@ -353,9 +367,15 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 					variableNode addReferenceToTrackedVariable:
 						(self findVariableByName: aNode value) ] ]
 		ifTrue: [
-			aNode variable isEscaping ifTrue: [
+			aNode variable isClassVariable ifTrue: [
 				self markVariableAsEscaped: aNode value.
-				^ aNode ] ]
+				^ self ].
+			aNode variable isInstanceVariable ifTrue: [
+				self markVariableAsEscaped: aNode value.
+				^ self ].
+			aNode variable isGlobalVariable ifTrue: [
+				self markVariableAsEscaped: aNode value.
+				^ self ] ]
 ]
 
 { #category : 'visiting' }

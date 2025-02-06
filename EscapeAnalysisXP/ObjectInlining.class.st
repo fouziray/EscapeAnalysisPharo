@@ -45,6 +45,12 @@ ObjectInlining >> argsOfContext: contextOfMethod referencing: aTrackedVariable [
 		  argVariable referencesTrackedVariable: aTrackedVariable ]
 ]
 
+{ #category : 'as yet unclassified' }
+ObjectInlining >> assignObjectCreatedInlineToTmp: method [
+1 halt.
+	method ast 
+]
+
 { #category : 'accessing' }
 ObjectInlining >> escapeAnalyzer [
 
@@ -58,6 +64,19 @@ ObjectInlining >> findCandidatesOf: aMethod [
 	dictionaryOIcandidatesPerMethod := Dictionary new.
 	self lookForNonEscapingNewStatements: aMethod.
 	^ objectInlineCandidates
+]
+
+{ #category : 'parsing' }
+ObjectInlining >> findCandidatesOfSet: aMethods [
+
+	| dictionaryOIcandidatesPerMethod |
+	dictionaryOIcandidatesPerMethod := Dictionary new.
+	aMethods do: [ :aMethod |
+		self lookForNonEscapingNewStatements: aMethod.
+		dictionaryOIcandidatesPerMethod at: aMethod put: objectInlineCandidates copy.
+
+			 ].
+		^ dictionaryOIcandidatesPerMethod
 ]
 
 { #category : 'as yet unclassified' }
@@ -143,7 +162,7 @@ ObjectInlining >> isAssignedTwice: aVariableName in: aMethod [
 ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 
 	| methodAssignmentNodes |
-	self initialize.
+	objectInlineCandidates:= OrderedCollection new.
 	escapeAnalyzer escapeAnalyze: aMethod.
 	methodAssignmentNodes := aMethod ast body assignmentNodes.
 	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
