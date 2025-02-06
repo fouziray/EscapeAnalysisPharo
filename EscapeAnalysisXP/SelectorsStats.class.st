@@ -23,3 +23,13 @@ dictionary:= Dictionary new.
 ^ dictionary
 
 ]
+
+{ #category : 'as yet unclassified' }
+SelectorsStats >> nMorphicMethodsAndTheirNumberInTheSystem [
+
+	| a |
+	a := Dictionary new.
+	self findSingleSelectorsWithNumberOfImplementation do: [ :key |
+		a at: key update: [ :v | v + 1 ] initial: 1 ].
+	^ a
+]
