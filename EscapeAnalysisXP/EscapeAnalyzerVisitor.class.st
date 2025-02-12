@@ -23,7 +23,8 @@ Class {
 		'savedFirstCtxRef',
 		'eaHistory',
 		'allowedDepth',
-		'setWorklistLimitation'
+		'setWorklistLimitation',
+		'escapeLog'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -139,10 +140,11 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	tempVariables := method ast body temporaryVariables.
 
 	topLevel := true.
-	variablesTable := context trackVariables:
-		                  method ast body temporaryNames.
-	workList := context extendWorkinglist: method.
 	context associatedMethod: method.
+	variablesTable := context trackVariables:
+		                  method ast body allTemporaryVariables .
+	workList := context extendWorkinglist: method.
+	
 	"	self addCurrentMethodReturnStatus: true."
 
 	currentTrackVarsTable := variablesTable.
@@ -214,7 +216,7 @@ EscapeAnalyzerVisitor >> initialize [
 	ctxList := OrderedCollection new.
 	savedFirstCtxRef := context.
 	self extendCtxList: context.
-
+	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
 	eaHistory := EscapeAnalysisHistory new.
@@ -264,7 +266,11 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 
 	| aVariable |
 	(aVariable := context findVariableByName: aVariableNode name)
-		ifNotNil: [ " in case the variable is not defined define it"
+		ifNotNil: [
+			escapeLog
+				at: (context globallyDistinctName: aVariableNode name)
+				put: context.
+			" in case the variable is not defined define it"
 			aVariable markEscaped.
 			^ true ]
 ]
@@ -316,6 +322,12 @@ EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
 		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName name
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> unravelLocalName: agloballyDistinctVariableName [
+
+	^ (agloballyDistinctVariableName splitOn: '_') last
 ]
 
 { #category : 'analyse' }
@@ -390,13 +402,15 @@ then whenever a variable is escaped this must bubble up until the returned varia
 	| referencedTrackedVariables trackedBlockNode |
 	(referencedTrackedVariables := self getTrackVariableNames select: [
 		                               :variable |
-		                               aBlockNode references: variable ])
+		                               aBlockNode references:
+			                               (self unravelLocalName: variable) ])
 		ifNotEmpty: [
-			trackedBlockNode := self trackVariable: aBlockNode.
+			trackedBlockNode := self trackVariable:
+				                    ( aBlockNode).
 
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
-					 self findVariableByNameSymbol: v ]) ]
+					 self findVariableByNameSymbol: (self unravelLocalName: v) ]) ]
 ]
 
 { #category : 'visiting' }

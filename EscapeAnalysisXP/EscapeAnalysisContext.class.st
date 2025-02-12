@@ -84,7 +84,9 @@ EscapeAnalysisContext >> extendWorkinglist: aMethod [
 { #category : 'as yet unclassified' }
 EscapeAnalysisContext >> findVariableByName: aName [
 
-	^ (currentTrackedVars select: [ :v | v name = aName ])
+	| globallyDistinctName |
+	globallyDistinctName := self globallyDistinctName: aName.
+	^ (currentTrackedVars select: [ :v | v name = globallyDistinctName ])
 		  ifNotEmpty: [ :e | ^ e first ]
 		  ifEmpty: [ ^ nil ]
 ]
@@ -92,7 +94,13 @@ EscapeAnalysisContext >> findVariableByName: aName [
 { #category : 'as yet unclassified' }
 EscapeAnalysisContext >> globallyDistinctName: aTrackedVariableName [
 
-	^ self currentMethod classBinding name , '_'
+| firstClassnamePrefix |
+ (self currentMethod isClassSide) ifTrue:[
+	firstClassnamePrefix :=	(self currentMethod classBinding value name splitOn: ' ') joinUsing: ''
+	] ifFalse: [
+	firstClassnamePrefix := self currentMethod classBinding name.
+	].
+	^  firstClassnamePrefix ,'_'
 	  , self currentMethod selector , '_' , aTrackedVariableName
 ]
 
@@ -153,7 +161,8 @@ EscapeAnalysisContext >> scope: anAst [
 EscapeAnalysisContext >> trackVariable: aTrackedVariable [
 
 	| aTrackedVariableNode |
-	aTrackedVariableNode := TrackedVariable new name: aTrackedVariable.
+	aTrackedVariableNode := TrackedVariable new name:
+		                        (self globallyDistinctName: aTrackedVariable).
 	aTrackedVariableNode associatedMethod: self associatedMethod.
 	currentTrackedVars add: aTrackedVariableNode.
 

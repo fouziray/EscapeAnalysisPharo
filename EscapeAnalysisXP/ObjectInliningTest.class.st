@@ -18,6 +18,26 @@ ObjectInliningTest >> setUp [
 ]
 
 { #category : 'tests' }
+ObjectInliningTest >> testHoneyGinger [
+ 
+	| candidates astt compiler method candidatesAssociatedWithTV newMethod|
+	objInliner allowedDepth: 8.
+	method := HGSimulator class >> #bouncingBalls.
+	newMethod :=	objInliner assignObjectCreatedInlineToTmp: method.
+		1 halt.
+	candidates := objInliner findCandidatesOf: newMethod .
+	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
+	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: newMethod.
+	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
+			 variable: (ASTVariableNode named: 'point1')
+			 value: (ASTMessageNode
+					  receiver: (ASTVariableNode named: 'PointInlined')
+					  selector: 'new')).
+
+
+]
+
+{ #category : 'tests' }
 ObjectInliningTest >> testInliningObjectPoint [
 
 	| candidates astt compiler method candidatesAssociatedWithTV|
