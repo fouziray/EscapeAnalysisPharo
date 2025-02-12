@@ -167,7 +167,7 @@ ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 	methodAssignmentNodes := aMethod ast body assignmentNodes.
 	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
 		methodAssignmentNodes do: [ :assignemntNode |
-			((assignemntNode references: nonEscapingNode name) and: [
+			((assignemntNode references: (escapeAnalyzer unravelLocalName: nonEscapingNode name)) and: [
 				 assignemntNode value isMessage
 	ifTrue: [ assignemntNode value selector = #new ]
 	ifFalse: [ false ] ]) ifTrue: [
