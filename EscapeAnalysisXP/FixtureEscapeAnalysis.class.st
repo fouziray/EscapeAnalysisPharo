@@ -27,6 +27,28 @@ FixtureEscapeAnalysis >> addEscapingVarToTrackedCollection [
 	^ self returnA: escapingVar
 ]
 
+{ #category : 'instVarAssignedtoNonEscapingObject' }
+FixtureEscapeAnalysis >> allocatedReturnInsideBranch [
+
+	true ifTrue: [
+		| temp |
+		temp := Point new.
+		^ self returnA: temp ]
+]
+
+{ #category : 'instVarAssignedtoNonEscapingObject' }
+FixtureEscapeAnalysis >> assignObjectToInstVarOfNonEscapingObject [
+
+	|temp1 temp2|
+		
+
+	temp1:= Point new.
+	temp1 setX: 1 setY: 1.
+	temp2 := Line new.
+	temp2 a: temp1.
+	
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> callMethodWithDifferentArgName [
 
@@ -360,6 +382,27 @@ FixtureEscapeAnalysis >> recursiveFunction [
 	| temp |
 	temp := FixtureEscapeAnalysis.
 	temp recursiveFunction.
+]
+
+{ #category : 'instVarAssignedtoNonEscapingObject' }
+FixtureEscapeAnalysis >> redeclaringVarInDifferentScope [
+
+	| temp |
+	temp := Point new.
+	self toto: temp.
+	true ifTrue: [
+		| temp |
+		temp := Point new.
+		^ self returnA: temp ]
+]
+
+{ #category : 'redefinitionVarScope' }
+FixtureEscapeAnalysis >> redefinedTemporary [
+	 |tmp|
+	 tmp:= Object new.
+	 true ifTrue:[ 
+tmp:= Object new.
+		 ]  
 ]
 
 { #category : 'recursive' }

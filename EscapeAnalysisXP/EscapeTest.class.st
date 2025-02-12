@@ -102,6 +102,28 @@ EscapeTest >> testHGSteamPaint [
 		(escapeAnalyzer findVariableByNameSymbol: #simulator) escapeStatus
 ]
 
+{ #category : 'testRealStuff' }
+EscapeTest >> testInsideBranchEscape [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #allocatedReturnInsideBranch.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testInterScopeIdenticalVarNameConfusion [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #redeclaringVarInDifferentScope. 
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus.
+		
+	
+]
+
 { #category : 'tests' }
 EscapeTest >> testMethod [
 
@@ -128,6 +150,21 @@ EscapeTest >> testNonReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirec
 		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testObjectEmbeddedInNonEscapingObject [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #assignObjectToInstVarOfNonEscapingObject. 
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #temp2) escapeStatus.
+		
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #temp1) escapeStatus 
+		
+	
 ]
 
 { #category : 'tests' }
@@ -190,6 +227,16 @@ EscapeTest >> testReturnedTempVarEscapedWithDifferentArgNameTwoLevelIndirection 
 		>> #callMethodWithDifferentArgNameTwoLevelIndirection.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testScopeDefinitionDistinction [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #redefinedTemporary. 
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #tmp) escapeStatus
 ]
 
 { #category : 'tests' }
