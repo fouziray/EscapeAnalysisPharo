@@ -94,6 +94,12 @@ EscapeAnalyzerVisitor >> allowedDepth: aDepth [
 ]
 
 { #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> allowedWorklistSize [
+
+	workListSizeLimit
+]
+
+{ #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> allowedWorklistSize: asize [
 
 	workListSizeLimit := asize
@@ -327,10 +333,12 @@ EscapeAnalyzerVisitor >> setTypeOf: aTV as: aClass [
 ]
 
 { #category : 'accessing' }
-EscapeAnalyzerVisitor >> setWorklistLimitation [
+EscapeAnalyzerVisitor >> setWorklistLimitation: aSize [
 	"comment stating purpose of instance-side method"
 
 	"scope: class-variables  &  instance-variables"
+
+	self allowedWorklistSize: aSize.
 
 	setWorklistLimitation := true
 ]

@@ -452,6 +452,25 @@ FixtureEscapeAnalysis >> returnReceiverMessageCallOnSelf [
 	^ p methodWithReturnSelf
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> runComplexWeightedGraph2 [
+
+
+	|graphType graph astar|
+	astar:= AIAstar new.
+	graphType := AICyclicWeightedComplexFixture new.
+	graph :=graphType complexWeightedGraph2.
+	astar nodes: graph nodes.
+	astar 
+	   edges: graph edges
+		from: #first
+		to: #second
+		weight: #third.
+
+	astar runFrom: 0.
+	
+]
+
 { #category : 'nested calls' }
 FixtureEscapeAnalysis >> singleImplementation: arg [
 ]
