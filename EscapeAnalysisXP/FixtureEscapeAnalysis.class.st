@@ -36,6 +36,16 @@ FixtureEscapeAnalysis >> allocatedReturnInsideBranch [
 		^ self returnA: temp ]
 ]
 
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> assignObjectToArrayConstructor [
+
+	| h |
+	"how can i escape and not escape without there being a message send "
+	
+	h := ObjectToBeInlined new.
+	h passSelfToArrayConstructor.
+]
+
 { #category : 'instVarAssignedtoNonEscapingObject' }
 FixtureEscapeAnalysis >> assignObjectToInstVarOfNonEscapingObject [
 
@@ -103,16 +113,6 @@ FixtureEscapeAnalysis >> callNestedMessages3 [
 	| o |
 	o := self foo twoImplementationMethods.
 	self receiverMessage singleImplementation: (self bar: o)
-]
-
-{ #category : 'accessing' }
-FixtureEscapeAnalysis >> callToObjectToInlineMethodEscapes [
-
-	| h |
-	"how can i escape and not escape without there being a message send "
-	
-	h := ObjectToBeInlined new.
-	h aMethodThatPassReceiverToAnotherObject.
 ]
 
 { #category : 'as yet unclassified' }

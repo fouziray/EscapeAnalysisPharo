@@ -7,7 +7,7 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-ObjectToBeInlined >> aMethodThatPassReceiverToAnotherObject [
+ObjectToBeInlined >> passSelfToArrayConstructor [
 
 	Array newFrom: { self } asOrderedCollection
 ]

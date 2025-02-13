@@ -24,7 +24,8 @@ Class {
 		'eaHistory',
 		'allowedDepth',
 		'setWorklistLimitation',
-		'escapeLog'
+		'escapeLog',
+		'workListSizeLimit'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -92,6 +93,12 @@ EscapeAnalyzerVisitor >> allowedDepth: aDepth [
 	allowedDepth := aDepth
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> allowedWorklistSize: asize [
+
+	workListSizeLimit := asize
+]
+
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 
@@ -107,6 +114,13 @@ EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 					self setReturnedFlag: true ].
 				child acceptVisitor: self
 				"savedStateOfReturnFlag := self currentMethodIsReturned." ] ]
+]
+
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
+
+	^ self getTrackVariableNames select: [ :variable |
+		  aBlockNode references: (self unravelLocalName: variable) ]
 ]
 
 { #category : 'accessing' }
@@ -283,6 +297,15 @@ EscapeAnalyzerVisitor >> removeFirstCtx [
 	^ nil
 ]
 
+{ #category : 'testing' }
+EscapeAnalyzerVisitor >> resetThenTrackVariable: aVariableNodeName [
+
+	| trackedVar |
+	(self isTrackedNode: aVariableNodeName) ifTrue: [
+		context unTrackVariable: aVariableNodeName ].
+	^ context trackVariable: aVariableNodeName name
+]
+
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
 
@@ -295,6 +318,12 @@ EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
 EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 
 	currentMethodIsReturned := aBoolean
+]
+
+{ #category : 'initialization' }
+EscapeAnalyzerVisitor >> setTypeOf: aTV as: aClass [
+
+	aTV type: aClass
 ]
 
 { #category : 'accessing' }
@@ -311,9 +340,15 @@ EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 
 	^ "(self workList size < 3000 ""and: [ implementors size < 5 ]"") and: [
 		  context analysisDepth < allowedDepth ]"
- setWorklistLimitation	ifTrue: [ (self workList size < 300 ) and: [context analysisDepth < allowedDepth]] ifFalse: [ 
+ setWorklistLimitation	ifTrue: [ (self workList size < workListSizeLimit ) and: [context analysisDepth < allowedDepth]] ifFalse: [ 
 		(context analysisDepth < allowedDepth ) 
 		]
+]
+
+{ #category : 'asserting' }
+EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock [
+
+	^ (self blockReferencesTVs: aBlock ) isNotEmpty 
 ]
 
 { #category : 'testing' }
@@ -370,7 +405,16 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 	(self isTrackedNode: aNode value)
 		ifFalse: [
 			self visitNode: aNode value.
+			( self isTrackedNode: aNode variable ) ifTrue: [
+				|abstractVariable|
+				abstractVariable := self findVariableByName: aNode variable.
+				
+				(aNode value isMessage
+ and: [ aNode value selector = #new ] ) ifTrue: [ 
+		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name).
+	  ].
 
+	].
 			(aNode value isBlock and: [ self isTrackedNode: aNode value ])
 				ifTrue: [
 					| variableNode |
@@ -379,6 +423,7 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 					variableNode addReferenceToTrackedVariable:
 						(self findVariableByName: aNode value) ] ]
 		ifTrue: [
+		|abstractVariable abstractValue|
 			aNode variable isClassVariable ifTrue: [
 				self markVariableAsEscaped: aNode value.
 				^ self ].
@@ -387,7 +432,12 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				^ self ].
 			aNode variable isGlobalVariable ifTrue: [
 				self markVariableAsEscaped: aNode value.
-				^ self ] ]
+				^ self ]. 
+			abstractVariable := 	self resetThenTrackVariable: aNode variable.
+				abstractValue := self findVariableByName: aNode value.
+				abstractValue hasType ifTrue: [ self setTypeOf: abstractVariable as: (abstractValue) type . ].
+ 
+			 ]
 ]
 
 { #category : 'visiting' }
@@ -400,13 +450,9 @@ then whenever a variable is escaped this must bubble up until the returned varia
 	"
 
 	| referencedTrackedVariables trackedBlockNode |
-	(referencedTrackedVariables := self getTrackVariableNames select: [
-		                               :variable |
-		                               aBlockNode references:
-			                               (self unravelLocalName: variable) ])
+	(referencedTrackedVariables := self blockReferencesTVs: aBlockNode)
 		ifNotEmpty: [
-			trackedBlockNode := self trackVariable:
-				                    ( aBlockNode).
+			trackedBlockNode := self trackVariable: aBlockNode.
 
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
@@ -422,7 +468,13 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 	implementors := aMessageNode selector implementors.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := nodesToTreat select: [ :e |
-		                    (self findVariableByName: e) isNotNil ].
+		(e isBlock and: [ self shouldTrackBlock: e ]) ifTrue: [ 
+ 				self trackVariable: e.
+				true.
+			 ] ifFalse: [
+			(self findVariableByName: e ) isNotNil
+			].
+		                     ].
 	followTheseNodes isNotEmpty ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [

@@ -45,7 +45,6 @@ ObjectInliningTest >> testInliningObjectPoint [
 	method := FixtureEscapeAnalysis >> #foo:.
 	candidates := objInliner findCandidatesOf: method.
 	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
-	1 halt.
 	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: method.
 
 	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode

@@ -123,3 +123,9 @@ TrackedVariable >> type [
 
 	^ type
 ]
+
+{ #category : 'testing' }
+TrackedVariable >> type: aClass [
+
+	type := aClass
+]

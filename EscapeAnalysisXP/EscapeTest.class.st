@@ -42,6 +42,16 @@ EscapeTest >> testArgBlockReturnsTemp [
 ]
 
 { #category : 'tests' }
+EscapeTest >> testAssignObjectToArrayConstructor [
+
+	self flag: #PassingVarToObjectCreation.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #assignObjectToArrayConstructor.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'tests' }
 EscapeTest >> testCollectionNonEscapingInAIAstar [
 	"escapeAnalyzer := EscapeAnalyzer new."
 
@@ -54,10 +64,15 @@ EscapeTest >> testCollectionNonEscapingInAIAstar [
 { #category : 'testRealStuff' }
 EscapeTest >> testComplexWeighterGraph [
 
+	self flag: #false.
+	self flag: #firstExample.
 	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer allowedWorklistSize: 100000.
 	escapeAnalyzer escapeAnalyze:
-		AICyclicWeightedComplexFixture >> #complexWeightedGraph2. 
+		AIAstarTest >> #testComplexWeightedGraph2.
 	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #astar) escapeStatus.
+			self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
 ]
 
@@ -239,6 +254,16 @@ EscapeTest >> testScopeDefinitionDistinction [
 		(escapeAnalyzer findVariableByNameSymbol: #tmp) escapeStatus
 ]
 
+{ #category : 'test - blocks' }
+EscapeTest >> testTVPassedToBlockPassedToMethodsValue [
+
+
+escapeAnalyzer allowedDepth: 300.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #returnBlockPassedAsArgument.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus
+]
+
 { #category : 'tests' }
 EscapeTest >> testTempInBlock [
 
@@ -289,16 +314,6 @@ EscapeTest >> testTempVarAssignedToTempNotEscaped [
 
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #fooSetToTemp.
 	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
-]
-
-{ #category : 'tests' }
-EscapeTest >> testTempVarCallingItsMethodEscapes [
-
-	self flag: #PassingVarToObjectCreation.
-	escapeAnalyzer escapeAnalyze:
-		FixtureEscapeAnalysis >> #callToObjectToInlineMethodEscapes.
-	self assert:
-		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
 { #category : 'tests' }
