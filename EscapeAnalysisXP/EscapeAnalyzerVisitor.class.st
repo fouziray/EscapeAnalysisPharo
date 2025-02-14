@@ -226,6 +226,22 @@ EscapeAnalyzerVisitor >> history [
 	^ eaHistory 
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
+
+	| receiverAbstarctVariable |
+	receiverAbstarctVariable := self findVariableByName:
+		                            aMessageNode receiver.
+	receiverAbstarctVariable ifNotNil: [
+		receiverAbstarctVariable hasType ifTrue: [
+			| aSingleMethod |
+			aSingleMethod := receiverAbstarctVariable type lookupSelector:
+				                 aMessageNode selector.
+			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection ] ] ].
+
+	^ aMessageNode selector implementors
+]
+
 { #category : 'initialization' }
 EscapeAnalyzerVisitor >> initialize [
 
@@ -473,7 +489,8 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
-	implementors := aMessageNode selector implementors.
+	
+	implementors := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := nodesToTreat select: [ :e |
 		(e isBlock and: [ self shouldTrackBlock: e ]) ifTrue: [ 

@@ -71,26 +71,19 @@ EscapeTest >> testCollectionNonEscapingInAIAstar [
 { #category : 'testRealStuff' }
 EscapeTest >> testComplexWeighterGraph [
 
-	| process   |
 	self flag: #false.
 	self flag: #firstExample.
-self skip.
+	self skip.
 
-	process := [
-	           escapeAnalyzer allowedDepth: 10000.
-	           escapeAnalyzer allowedWorklistSize: 10000.
-	           escapeAnalyzer escapeAnalyze:
-		           FixtureEscapeAnalysis >> #runComplexWeightedGraph2.
-		self deny:
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer allowedWorklistSize: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #runComplexWeightedGraph2.
+	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #astar) escapeStatus.
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
-	            ] fork.
-
-
-	
-
-	
 ]
 
 { #category : 'tests - find variable' }
@@ -269,6 +262,16 @@ EscapeTest >> testScopeDefinitionDistinction [
 		FixtureEscapeAnalysis >> #redefinedTemporary. 
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #tmp) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testStaticTypeRestraint [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #staticTypeExample. 
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #typedObject) escapeStatus
 ]
 
 { #category : 'test - blocks' }

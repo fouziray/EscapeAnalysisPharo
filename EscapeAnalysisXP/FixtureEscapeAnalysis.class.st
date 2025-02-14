@@ -475,6 +475,15 @@ FixtureEscapeAnalysis >> runComplexWeightedGraph2 [
 FixtureEscapeAnalysis >> singleImplementation: arg [
 ]
 
+{ #category : 'static_type' }
+FixtureEscapeAnalysis >> staticTypeExample [
+
+	| typedObject |
+	typedObject := FixtureEscapeAnalysis new.
+
+	^ typedObject yourself
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> tata: y [
 
@@ -534,4 +543,10 @@ FixtureEscapeAnalysis >> usedBlockReturnsTemp2 [
 	h := [ ^ tempo ]. "non local return"
 	 h .
 	true.
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> yourself [
+
+	^ 4
 ]
