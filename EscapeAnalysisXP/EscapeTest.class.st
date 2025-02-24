@@ -156,6 +156,16 @@ EscapeTest >> testMethod [
 	self assert: (escapeAnalyzer findVariableByNameSymbol: #a) escapeStatus 
 ]
 
+{ #category : 'test embedded messages' }
+EscapeTest >> testNestedMessageAsArg [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #nestedMessageInArgument.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
+]
+
 { #category : 'tests' }
 EscapeTest >> testNonReturnedTempVarEscapedThreeLevelIndirectionWithHigherDepth [
 	"escapeAnalyzer := EscapeAnalyzer new."
@@ -272,6 +282,16 @@ EscapeTest >> testStaticTypeRestraint [
 		FixtureEscapeAnalysis >> #staticTypeExample. 
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #typedObject) escapeStatus
+]
+
+{ #category : 'test - blocks' }
+EscapeTest >> testTVPassedToBlockPassedEvaluation2 [
+
+
+escapeAnalyzer allowedDepth: 300.
+	escapeAnalyzer escapeAnalyze: AndreasSystemProfiler class >> #spyOn:.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #profiler) escapeStatus
 ]
 
 { #category : 'test - blocks' }

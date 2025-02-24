@@ -39,6 +39,12 @@ ObjectInlining >> allowedDepth: aNumber [
 ]
 
 { #category : 'as yet unclassified' }
+ObjectInlining >> allowedWorklistSize: aSize [
+
+	escapeAnalyzer allowedWorklistSize: aSize 
+]
+
+{ #category : 'as yet unclassified' }
 ObjectInlining >> argsOfContext: contextOfMethod referencing: aTrackedVariable [
 
 	^ contextOfMethod trackedMethodArgs select: [ :argVariable |
