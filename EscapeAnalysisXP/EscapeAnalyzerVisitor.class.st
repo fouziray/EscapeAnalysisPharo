@@ -274,7 +274,7 @@ EscapeAnalyzerVisitor >> isMethodTreated: aMethod [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> isSpecialMethod: aMethodSelector [
 
-	^ { #new. #value, #shouldNotImplement } includes: aMethodSelector
+	^ { #new. #value, #shouldNotImplement, #valueNoContextSwitch } includes: aMethodSelector
 ]
 
 { #category : 'testing' }
@@ -435,7 +435,7 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				
 				(aNode value isMessage
  and: [ aNode value selector = #new ] ) ifTrue: [ 
-		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name).
+		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil).
 	  ].
 
 	].

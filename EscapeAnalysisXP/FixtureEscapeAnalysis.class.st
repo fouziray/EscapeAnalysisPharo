@@ -328,6 +328,14 @@ FixtureEscapeAnalysis >> methodWithReturnSelf [
 	^ self. 
 ]
 
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> nestedMessageInArgument [
+
+	| o |
+	o := Object new.
+	 self fooSetterToGlobal: (self returnA: o)
+]
+
 { #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> noReturnArgumentMessage [
 
