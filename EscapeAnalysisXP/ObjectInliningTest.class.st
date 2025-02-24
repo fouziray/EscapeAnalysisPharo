@@ -24,14 +24,13 @@ ObjectInliningTest >> testHoneyGinger [
 	objInliner allowedDepth: 8.
 	method := HGSimulator class >> #bouncingBalls.
 	newMethod :=	objInliner assignObjectCreatedInlineToTmp: method.
-		1 halt.
-	candidates := objInliner findCandidatesOf: newMethod .
+	candidates := objInliner findCandidatesOf: method .
 	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
 	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: newMethod.
-	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
-			 variable: (ASTVariableNode named: 'point1')
-			 value: (ASTMessageNode
-					  receiver: (ASTVariableNode named: 'PointInlined')
+	self assert: candidatesAssociatedWithTV first key equals: (RBAssignmentNode
+			 variable: (RBVariableNode named: 'point1')
+			 value: (RBMessageNode
+					  receiver: (RBVariableNode named: 'PointInlined')
 					  selector: 'new')).
 
 
@@ -47,10 +46,10 @@ ObjectInliningTest >> testInliningObjectPoint [
 	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
 	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: method.
 
-	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
-			 variable: (ASTVariableNode named: 'point1')
-			 value: (ASTMessageNode
-					  receiver: (ASTVariableNode named: 'PointInlined')
+	self assert: candidatesAssociatedWithTV first key equals: (RBAssignmentNode
+			 variable: (RBVariableNode named: 'point1')
+			 value: (RBMessageNode
+					  receiver: (RBVariableNode named: 'PointInlined')
 					  selector: 'new'))
 ]
 
@@ -64,10 +63,10 @@ ObjectInliningTest >> testInliningObjectPoint2 [
 	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
 	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: method.
 
-	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
-			 variable: (ASTVariableNode named: 'point1')
-			 value: (ASTMessageNode
-					  receiver: (ASTVariableNode named: 'PointInlined')
+	self assert: candidatesAssociatedWithTV first key equals: (RBAssignmentNode
+			 variable: (RBVariableNode named: 'point1')
+			 value: (RBMessageNode
+					  receiver: (RBVariableNode named: 'PointInlined')
 					  selector: 'new'))
 ]
 

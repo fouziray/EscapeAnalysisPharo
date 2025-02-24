@@ -134,6 +134,12 @@ FixtureEscapeAnalysis >> callTwiceReturnOneDifferentVars [
 	^ self returnA: p " the second one which is supposed to mark the p variable as escaped is being ignored"
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> classSideInstantiationWithoutAssingmentToTemp [
+
+
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> foo3 [
 

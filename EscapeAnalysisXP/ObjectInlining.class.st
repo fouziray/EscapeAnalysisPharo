@@ -28,7 +28,7 @@ ObjectInlining >> allmessagesOf: copyAst havingArg: trackedV [
 					   args := OrderedCollection withAll: e arguments.
 					   args add: e receiver.
 					   args anySatisfy: [ :e |
-						   e isVariable and: [ e name = trackedV name ] ] ]
+						   e isVariable and: [ e name = ( self escapeAnalyzer unravelLocalName:  trackedV name ) ] ] ]
 				   ifFalse: [ false ] ])
 ]
 
@@ -53,7 +53,6 @@ ObjectInlining >> argsOfContext: contextOfMethod referencing: aTrackedVariable [
 
 { #category : 'as yet unclassified' }
 ObjectInlining >> assignObjectCreatedInlineToTmp: method [
-1 halt.
 	method ast 
 ]
 
@@ -126,7 +125,7 @@ ObjectInlining >> inlineRefactorCandidateObjects: inliningCandidates in: aCompil
 					inContainer: aCompiledMethod classBinding value
 					tv: candidate value ].
 
-			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
+			aCandidate value replaceWith: (RBVariableNode named: 'self') ].
 
 		self
 			renamecallSitesOfAst: astClone
@@ -194,7 +193,7 @@ ObjectInlining >> mergeMethod: singleMethod of: inlinedObject in: containerClass
 			                      prefixInlinedObject: inlinedObject name
 			                      to: instVar name.
 	
-		rewriter := ASTParseTreeRewriter new.
+		rewriter := RBParseTreeRewriter new.
 		rewriter replace: instVar name with: newInstanceVarName.
 		rewriter executeTree: copyAst.
 		(containerClass hasInstVarNamed: newInstanceVarName) ifFalse: [
@@ -359,7 +358,7 @@ ObjectInlining >> refactorCandidateObjectsNames: inliningCandidates in: aCompile
 			aCandidate value isMessage ifTrue: [
 				inlinedObject := aCandidate value receiver ].
 		
-			aCandidate value replaceWith: (ASTVariableNode named: 'self') ].
+			aCandidate value replaceWith: (RBVariableNode named: 'self') ].
 
 		astClone selector: #inlined , astClone selector ].
 	aCompiledMethod classBinding value  compile: astClone asString
@@ -379,7 +378,7 @@ ObjectInlining >> refactorOccurencesOf: trackedVariables [
 
 			(astClone allChildren select: [ :e | e name = tv name ]) do: [
 				:aCandidate |
-				aCandidate replaceWith: (ASTVariableNode named: 'self').
+				aCandidate replaceWith: (RBVariableNode named: 'self').
 				self refactorOccurencesOf: aCandidate trackedVarsReferencingSelf ].
 
 			tv associatedMethod classBinding value compile: astClone asString ] ]
@@ -405,7 +404,7 @@ ObjectInlining >> renamecallSitesOfAst: copyAst withArgument: trackedV inlinedTo
 						                             prefixInlinedObject:
 						                             messageNode receiver name
 						                             to: messageNode selector).
-				  conditionalClassBranch receiver: (ASTVariableNode named: 'self').
+				  conditionalClassBranch receiver: (RBVariableNode named: 'self').
 
 				  self
 					  mergeMethod:
@@ -428,22 +427,22 @@ ObjectInlining >> renamecallSitesOfAst: copyAst withArgument: trackedV inlinedTo
 				  enclosingMessageNode := self findEnclosingStatementNodeFor:
 					                          messageNode.
 				  enclosingMessageNodeParentCopy := enclosingMessageNode copy.
-				  conditionalClassBranch := ASTMessageNode
+				  conditionalClassBranch := RBMessageNode
 					                            receiver: messageNode receiver
 					                            selector: #class.
-				  conditionalClassBranch := ASTMessageNode
+				  conditionalClassBranch := RBMessageNode
 					                            receiver: conditionalClassBranch
 					                            selector: #name.
 
 
-				  conditionalClassBranch := ASTMessageNode
+				  conditionalClassBranch := RBMessageNode
 					                            receiver: conditionalClassBranch
 					                            selector: #'=='
 					                            arguments:
-					                            { (ASTLiteralValueNode value:
+					                            { (RBLiteralValueNode value:
 						                             containerClassName name) }.
 
-				  rewritingParser := ASTParseTreeRewriter new.
+				  rewritingParser := RBParseTreeRewriter new.
 				  rewritingParser
 					  replaceTree: messageNode
 					  withTree: inlinedMessageCall.
@@ -451,18 +450,18 @@ ObjectInlining >> renamecallSitesOfAst: copyAst withArgument: trackedV inlinedTo
 				  enclosingMessageNode parent
 					  replaceNode: messageNode
 					  withNode: inlinedMessageCall.
-				  conditionalClassBranch := ASTMessageNode
+				  conditionalClassBranch := RBMessageNode
 					                            receiver: conditionalClassBranch
 					                            selector: #ifTrue:ifFalse:
 					                            arguments: (OrderedCollection
 							                             with:
-								                             (ASTBlockNode body:
-									                              (ASTSequenceNode statements:
+								                             (RBBlockNode body:
+									                              (RBSequenceNode statements:
 										                               (OrderedCollection with:
 											                                enclosingMessageNode)))
 							                             with:
-								                             (ASTBlockNode body:
-									                              (ASTSequenceNode statements:
+								                             (RBBlockNode body:
+									                              (RBSequenceNode statements:
 										                               (OrderedCollection with:
 											                                enclosingMessageNodeParentCopy)))).
 

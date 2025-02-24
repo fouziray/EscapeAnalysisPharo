@@ -58,6 +58,17 @@ EscapeTest >> testAssignObjectToArrayConstructor [
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
+{ #category : 'testRealStuff' }
+EscapeTest >> testClassSideInstanciation [
+"this test describes how class side instantiated objects are analysed even without having a temp alias variable, we create a fictitious variable named arbitrarily using class name and its index if other variables exist"
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #classSideInstantiationWithoutAssingmentToTemp.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus
+]
+
 { #category : 'tests' }
 EscapeTest >> testCollectionNonEscapingInAIAstar [
 	"escapeAnalyzer := EscapeAnalyzer new."
