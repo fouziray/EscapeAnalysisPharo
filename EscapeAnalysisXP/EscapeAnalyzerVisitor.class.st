@@ -6,7 +6,7 @@ At the entry of the block the tracked variables are checked to see if they are a
 "
 Class {
 	#name : 'EscapeAnalyzerVisitor',
-	#superclass : 'ASTProgramNodeVisitor',
+	#superclass : 'RBProgramNodeVisitor',
 	#instVars : [
 		'workList',
 		'variablesTable',
