@@ -25,7 +25,9 @@ Class {
 		'allowedDepth',
 		'setWorklistLimitation',
 		'escapeLog',
-		'workListSizeLimit'
+		'workListSizeLimit',
+		'analysisStats',
+		'ctxCounter'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -81,6 +83,12 @@ EscapeAnalyzerVisitor >> addMethodsToWorkList: aMethodCollection [
 	workList addAll: aMethodCollection
 ]
 
+{ #category : 'adding' }
+EscapeAnalyzerVisitor >> addStat: anArray of: amethod [
+
+	analysisStats addStat: anArray of: amethod 
+]
+
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> allowedDepth [
 
@@ -103,6 +111,12 @@ EscapeAnalyzerVisitor >> allowedWorklistSize [
 EscapeAnalyzerVisitor >> allowedWorklistSize: asize [
 
 	workListSizeLimit := asize
+]
+
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> analysisStats [
+
+	^ analysisStats 
 ]
 
 { #category : 'analyse' }
@@ -129,6 +143,19 @@ EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 		  aBlockNode references: (self unravelLocalName: variable) ]
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> checkMessageAlreadyAddedToWorkingList: aMessageNode [
+
+| indexOfSimilarContext contextWorklist|
+contextWorklist := ctxList collect: #associatedMethod.
+indexOfSimilarContext := ( contextWorklist collect: #selector ) indexOf: aMessageNode selector.
+( indexOfSimilarContext	 ~= 0 )ifTrue: [ 
+		self linkArgumentsOf: aMessageNode.
+		^true.
+		 ].
+	^false.
+]
+
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> context [
 
@@ -139,6 +166,18 @@ EscapeAnalyzerVisitor >> context [
 EscapeAnalyzerVisitor >> context: anEscapeAnalysisContext [
 
 	context := anEscapeAnalysisContext.
+]
+
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> contxtCounterForCurrentMethod [
+
+	^ ctxCounter
+]
+
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> ctxList [
+
+	^ ctxList 
 ]
 
 { #category : 'queries' }
@@ -158,7 +197,6 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 
 	| next tempVariables currentTrackVarsTable |
 	tempVariables := method ast body temporaryVariables.
-
 	topLevel := true.
 	context associatedMethod: method.
 	variablesTable := context trackVariables:
@@ -175,11 +213,12 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 		self analyzeMethod: next.
 		eaHistory addHistory: self context for: next.
 		self context: self removeFirstCtx.
-
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 		topLevel := false ].
-
-
+	
+ 	self resetContxtCounterForCurrentMethod.
+	self addStat: ctxCounter copy of: method.
+	
 	self context: savedFirstCtxRef
 ]
 
@@ -242,6 +281,12 @@ EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
 	^ aMessageNode selector implementors
 ]
 
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> incrementContxtCounterForCurrentMethod [
+
+	ctxCounter := ctxCounter + 1
+]
+
 { #category : 'initialization' }
 EscapeAnalyzerVisitor >> initialize [
 
@@ -256,7 +301,9 @@ EscapeAnalyzerVisitor >> initialize [
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
 	eaHistory := EscapeAnalysisHistory new.
-	allowedDepth := 3
+	allowedDepth := 3.
+	analysisStats := AnalysisStats new.
+	ctxCounter := 0
 ]
 
 { #category : 'testing' }
@@ -297,6 +344,20 @@ EscapeAnalyzerVisitor >> isVariableEscaped: aName [
 	^ savedFirstCtxRef isVariableEscaped: aName
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> linkArgumentsOf: aMessageNode [
+
+
+
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> linkArgumentsOf: aMessageNode toTrackedVarsOfContext: aContext [
+
+
+
+]
+
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 
@@ -313,10 +374,16 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> removeFirstCtx [
-
-	ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
+	self incrementContxtCounterForCurrentMethod.
+		ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
 
 	^ nil
+]
+
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> resetContxtCounterForCurrentMethod [
+
+	 ctxCounter := 0.
 ]
 
 { #category : 'testing' }
@@ -512,7 +579,8 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							 self isAtTopLevel ]) ifTrue: [
 							self setReturnedFlag: true.
 							returnStateOfMessage := context returnStatus ].
-
+						self checkMessageAlreadyAddedToWorkingList: aMessageNode .
+						1 halt. 
 						self
 							addContext: returnStateOfMessage
 							to: self

@@ -492,6 +492,18 @@ FixtureEscapeAnalysis >> staticTypeExample [
 	^ typedObject yourself
 ]
 
+{ #category : 'static_type' }
+FixtureEscapeAnalysis >> staticTypeExample2 [
+|x y|
+	x > 0
+		ifTrue: [
+			y := Object new.
+			y actionMap ]
+		ifFalse: [
+			y := Morph new.
+			y actionMap ]
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> tata: y [
 
