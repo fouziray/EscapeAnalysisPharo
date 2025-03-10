@@ -380,6 +380,19 @@ FixtureEscapeAnalysis >> notUsedBlockTemp [
 	^ self toto: h
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> objectAddedToCollection [
+
+| tracked addEdges eto efrom eval|
+tracked := OrderedCollection new.
+		tracked add: efrom.
+		tracked add: eto.
+		tracked add: eval.
+		addEdges add: tracked asArray.
+		
+	 addEdges " escape line of first var, should trigger its contents to escape too" " the reason why now it is marked escaped. is because of add: not because it references tracked"
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> objectEscaped [
 

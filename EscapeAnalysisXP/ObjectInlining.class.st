@@ -80,7 +80,7 @@ ObjectInlining >> findCandidatesOfSet: aMethods [
 	aMethods do: [ :aMethod |
 		self lookForNonEscapingNewStatements: aMethod.
 		dictionaryOIcandidatesPerMethod at: aMethod put: objectInlineCandidates copy.
-
+	escapeAnalyzer reset.
 			 ].
 		^ dictionaryOIcandidatesPerMethod
 ]

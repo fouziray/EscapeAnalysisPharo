@@ -210,7 +210,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
-		self analyzeMethod: next.
+	self analyzeMethod: next.
 		eaHistory addHistory: self context for: next.
 		self context: self removeFirstCtx.
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
@@ -378,6 +378,26 @@ EscapeAnalyzerVisitor >> removeFirstCtx [
 		ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
 
 	^ nil
+]
+
+{ #category : 'initialization' }
+EscapeAnalyzerVisitor >> reset [
+
+	context analysisDepth: context analysisDepth.
+	context := EscapeAnalysisContext new.
+	context analysisDepth: 1.
+	context returnStatus: true.
+	"setWorklistLimitation := false."
+	ctxList := OrderedCollection new.
+	savedFirstCtxRef := context.
+	self extendCtxList: context.
+	escapeLog := Dictionary new.
+	trackVariableNameChanges := Dictionary new.
+	self setReturnedFlag: false.
+	eaHistory := EscapeAnalysisHistory new.
+	"allowedDepth := 3."
+	analysisStats := AnalysisStats new.
+	ctxCounter := 0
 ]
 
 { #category : 'analyse' }
@@ -580,7 +600,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							self setReturnedFlag: true.
 							returnStateOfMessage := context returnStatus ].
 						self checkMessageAlreadyAddedToWorkingList: aMessageNode .
-						1 halt. 
+			
 						self
 							addContext: returnStateOfMessage
 							to: self

@@ -92,6 +92,21 @@ EscapeTest >> testCollectionNonEscapingInAIAstar [
 ]
 
 { #category : 'testRealStuff' }
+EscapeTest >> testComplexCycleGraph2 [
+
+
+
+	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		AICyclicNonWeightedComplexFixture >> #complexCycleGraph2  .
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #edges) escapeStatus.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
 EscapeTest >> testComplexWeighterGraph [
 
 	self flag: #false.
@@ -106,6 +121,19 @@ EscapeTest >> testComplexWeighterGraph [
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #astar) escapeStatus.
 	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
+]
+
+{ #category : 'False Positive' }
+EscapeTest >> testFPsimpleWeightedGraph2 [
+"the first analysis configuration d=1 w=100"
+	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedWorklistSize: 100. 
+	
+
+	escapeAnalyzer escapeAnalyze:
+		AICyclicWeightedSimpleFixture >> #simpleWeightedGraph2.
+	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
 ]
 
@@ -183,6 +211,16 @@ EscapeTest >> testMethod [
 EscapeTest >> testNestedMessageAsArg [
 
 	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #nestedMessageInArgument.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
+]
+
+{ #category : 'test embedded messages' }
+EscapeTest >> testNestedMessageAsArgShouldConsiderReturnedVariable [
+
+	escapeAnalyzer allowedDepth: 1000.
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #nestedMessageInArgument.
 	self assert:
@@ -437,6 +475,19 @@ EscapeTest >> testVarEscapedThreeLevelIndirectionNoDepthRestraint [
 	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis
 		>> #callMethodWithDifferentArgNameThreeLevelIndirection.
 	self deny: (escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
+]
+
+{ #category : 'collection operations' }
+EscapeTest >> testVariableAddedToCollection [
+
+escapeAnalyzer allowedDepth: 300.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectAddedToCollection.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #tracked) escapeStatus.
+		self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #addEdges ) escapeStatus
+
+
 ]
 
 { #category : 'tests' }
