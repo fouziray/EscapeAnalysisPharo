@@ -275,8 +275,20 @@ EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
 		receiverAbstarctVariable hasType ifTrue: [
 			| aSingleMethod |
 			aSingleMethod := receiverAbstarctVariable type lookupSelector:
+				                 aMessageNode selector. "consider reassignment of the var to upper type, then we need to treat all implementations of the hierarchy instead of looking up the first one."
+			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection ] ] ]
+	ifNil: [ 
+		aMessageNode receiver isSelfVariable ifTrue: [
+			|aSingleMethod|
+			aSingleMethod :=	self context currentMethod classBinding value lookupSelector:
 				                 aMessageNode selector.
-			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection ] ] ].
+			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection].
+			]
+		
+		
+		 ]
+	
+	.
 
 	^ aMessageNode selector implementors
 ]
@@ -538,11 +550,10 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				(aNode value isMessage
  and: [ aNode value selector = #new ] ) ifTrue: [ 
 		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil).
-		aNode value receiver isSelfOrSuperVariable ifTrue: [ self setTypeForPseudoVariable: aNode inRepresentingObject: abstractVariable ]
+		aNode value receiver isSelfOrSuperVariable ifTrue: [ self setTypeForPseudoVariable: aNode value receiver inRepresentingObject: abstractVariable ]
 	  ] ifFalse: [
 		aNode value isSelfOrSuperVariable ifTrue: [ 
-			
-				self setTypeForPseudoVariable: aNode inRepresentingObject: abstractVariable .
+				self setTypeForPseudoVariable: aNode value inRepresentingObject: abstractVariable .
 			
 			 ]
 	].

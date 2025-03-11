@@ -29,6 +29,18 @@ escapeAnalyzer setWorklistLimitation: 300.
 ]
 
 { #category : 'testRealStuff' }
+EscapeTest >> test2implShouldTreatOnlySelfRelated [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #twoImplementationShouldTreatOnlySelfRelated.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOfcomplexWeightedGraph4 [
 
 "
@@ -253,7 +265,7 @@ EscapeTest >> testMethod [
 	self assert: (escapeAnalyzer findVariableByNameSymbol: #a) escapeStatus 
 ]
 
-{ #category : 'test embedded messages' }
+{ #category : 'HIGH PRIORITY test embedded messages' }
 EscapeTest >> testNestedMessageAsArg [
 
 	escapeAnalyzer allowedDepth: 10000.
@@ -263,7 +275,7 @@ EscapeTest >> testNestedMessageAsArg [
 		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
 ]
 
-{ #category : 'test embedded messages' }
+{ #category : 'HIGH PRIORITY test embedded messages' }
 EscapeTest >> testNestedMessageAsArgShouldConsiderReturnedVariable [
 
 	escapeAnalyzer allowedDepth: 1000.
