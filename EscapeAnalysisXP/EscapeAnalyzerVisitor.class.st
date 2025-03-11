@@ -430,6 +430,21 @@ EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 ]
 
 { #category : 'initialization' }
+EscapeAnalyzerVisitor >> setTypeForPseudoVariable: aVariableNode inRepresentingObject: aTrackedVariable [
+
+	aVariableNode isSelfVariable ifTrue: [ 
+		
+		self setTypeOf: aTrackedVariable as: (self context currentMethod classBinding value)
+		
+		 ] ifFalse: [ 
+		
+		"then it is super"
+		self setTypeOf: aTrackedVariable as: (self context currentMethod classBinding value) superclass.
+		
+		 ]
+]
+
+{ #category : 'initialization' }
 EscapeAnalyzerVisitor >> setTypeOf: aTV as: aClass [
 
 	aTV type: aClass
@@ -523,7 +538,14 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				(aNode value isMessage
  and: [ aNode value selector = #new ] ) ifTrue: [ 
 		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil).
-	  ].
+		aNode value receiver isSelfOrSuperVariable ifTrue: [ self setTypeForPseudoVariable: aNode inRepresentingObject: abstractVariable ]
+	  ] ifFalse: [
+		aNode value isSelfOrSuperVariable ifTrue: [ 
+			
+				self setTypeForPseudoVariable: aNode inRepresentingObject: abstractVariable .
+			
+			 ]
+	].
 
 	].
 			(aNode value isBlock and: [ self isTrackedNode: aNode value ])

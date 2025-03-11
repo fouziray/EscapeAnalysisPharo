@@ -29,6 +29,52 @@ escapeAnalyzer setWorklistLimitation: 300.
 ]
 
 { #category : 'testRealStuff' }
+EscapeTest >> testAnalysisOfcomplexWeightedGraph4 [
+
+"
+When reaching the conditional block that returns the tabs variable.
+	- it should be marked as escaped since it is referenced in the block.
+	- the block is passed to a common selector ifTrue:IfFalse, and their variants.
+	- Should apply escape On the block knowing that no more instructions are following-up the return.
+"
+"
+Uncoherent escape status ! This test should work according to the result of the analysis. done with config: { depth: 1. worklistLimit: 100 } }
+"
+
+	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		AICyclicWeightedComplexFixture >> #complexWeightedGraph4.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #graph) escapeStatus
+
+
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testAnalysisOffind [
+
+"
+When reaching the conditional block that returns the tabs variable.
+	- it should be marked as escaped since it is referenced in the block.
+	- the block is passed to a common selector ifTrue:IfFalse, and their variants.
+	- Should apply escape On the block knowing that no more instructions are following-up the return.
+"
+"
+Uncoherent escape status ! This test should work according to the result of the analysis. done with config: { depth: 1. worklistLimit: 100 } }
+"
+
+	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		AIDisjointSetNode>>#find.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #root) escapeStatus
+
+
+]
+
+{ #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOftestGetNewTab [
 
 "
@@ -268,6 +314,13 @@ EscapeTest >> testObjectEscaped [
 
 "	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
 	self assert: (escapeAnalyzer variablesTable at: #xx)"
+]
+
+{ #category : 'pseudo-variables' }
+EscapeTest >> testPseudoVariableSelf [
+
+
+
 ]
 
 { #category : 'tests' }

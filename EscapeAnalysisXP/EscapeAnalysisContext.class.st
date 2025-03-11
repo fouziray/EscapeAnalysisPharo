@@ -198,7 +198,7 @@ EscapeAnalysisContext >> trackedVariablesTable: aTrackedVariablesTable [
 { #category : 'as yet unclassified' }
 EscapeAnalysisContext >> unTrackVariable: anASTNode [
 
-	currentTrackedVars remove: (self findVariableByName: anASTNode) ifAbsent: [].
+	currentTrackedVars remove: (self findVariableByName: anASTNode name) ifAbsent: [].
 	
 ]
 
