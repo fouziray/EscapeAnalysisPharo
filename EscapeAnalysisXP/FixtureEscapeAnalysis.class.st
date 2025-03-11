@@ -267,6 +267,8 @@ FixtureEscapeAnalysis >> inlined_PointInlined_pointY: anInteger [
 
 { #category : 'nested calls' }
 FixtureEscapeAnalysis >> localMessage: arg [
+
+	self returnA: arg.
 ]
 
 { #category : 'tests' }
@@ -565,6 +567,16 @@ FixtureEscapeAnalysis >> totoWithDifferentArgNameTwoLevelIndirectionNoEscapes: a
 FixtureEscapeAnalysis >> twoImplementationMethods [
 
 	
+]
+
+{ #category : 'nested calls' }
+FixtureEscapeAnalysis >> twoImplementationShouldTreatOnlySelfRelated [
+
+	| o |
+	o := self.
+
+	self localMessage: o.
+	self returnA: 1
 ]
 
 { #category : 'tests - blocks' }
