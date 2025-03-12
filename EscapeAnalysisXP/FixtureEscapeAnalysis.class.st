@@ -242,6 +242,38 @@ FixtureEscapeAnalysis >> fooSetterToTemp: h [
 ]
 
 { #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlinedFootballAnimationHG [
+	"HGSimulator bouncingBalls"
+
+	| simulator |
+	simulator := HGSimulator new.
+	simulator extent: 500 @ 500.
+	simulator
+		simulationOrigin: (HG2dPoint x: 0.0 y: 0.0)
+		corner: (HG2dPoint x: 500.0 y: 500.0).
+	simulator addInitializer: (HGRandomPosition
+			 origin: (HG2dPoint fromPoint: simulator bounds origin)
+			 corner: (HG2dPoint fromPoint: simulator bounds corner)).
+	simulator addInitializer:
+		(HGVelocityInitialization with: (HG2dPoint x: 0.01 y: 0.0)).
+	simulator addInitializer: (HGPressureInitialization with: 2.0).
+	simulator addAction: (HGHandParticle at: 1).
+	simulator addAction: (HGForceInitialization with: HG2dPoint zero).
+	simulator addAction:
+		(HGPressureRepulsion kernel: (HGSimpleKernel support: 24.0)).
+	simulator addAction: (HGGravity g: (HG2dPoint x: 0 y: 0.098)).
+	simulator addAction: HGForceIntegration new.
+	simulator addAction: HGVelocityIntegration new.
+	simulator addAction: (HGBoundingBox reflectionRate: 0.9).
+	simulator addAction: HGLocalityMap new.
+	simulator addAction: HGFormVisualizer footballs.
+	10 timesRepeat: [
+		simulator addParticleAt: 0 @ 0 temperature: 390 mass: 400 ].
+	simulator openInWindowLabeled: 'Football'.
+	^ simulator
+]
+
+{ #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> inlined_PointInlined_pointX [
 
 	^ inlined_PointInlined_x
@@ -263,6 +295,29 @@ FixtureEscapeAnalysis >> inlined_PointInlined_pointY [
 FixtureEscapeAnalysis >> inlined_PointInlined_pointY: anInteger [
 
 	inlined_PointInlined_y := anInteger
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlinedfoo: point2 [
+
+	| point1 line |
+	point1 := self.
+	point1 pointX: 1.
+	point1 pointY: 12.
+	line := LineInlined p1: point1 p2: point2.
+	line lineLength.
+	^ line
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> inlinedfooNotReturn: point2 [
+
+	| point1 line |
+	point1 := self.
+	point1 pointX: 1.
+	point1 pointY: 12.
+	line := LineInlined p1: point1 p2: point2.
+	^ line lineLength
 ]
 
 { #category : 'nested calls' }

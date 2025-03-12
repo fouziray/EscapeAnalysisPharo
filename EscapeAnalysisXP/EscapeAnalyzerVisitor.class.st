@@ -333,6 +333,17 @@ EscapeAnalyzerVisitor >> isAtTopLevel [
 ]
 
 { #category : 'queries' }
+EscapeAnalyzerVisitor >> isMethodPresentInWorklist: aMethod [
+
+	| methodIndexInList |
+	methodIndexInList := (ctxList collect: #associatedMethod) indexOf:
+		                     aMethod.
+	^ methodIndexInList = 0
+		  ifFalse: [ methodIndexInList < ctxList size ]
+		  ifTrue: [ false ]
+]
+
+{ #category : 'queries' }
 EscapeAnalyzerVisitor >> isMethodTreated: aMethod [
 
 	^ eaHistory isImplementorTreated: aMethod
