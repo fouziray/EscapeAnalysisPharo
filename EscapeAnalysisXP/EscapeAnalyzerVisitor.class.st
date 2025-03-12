@@ -67,10 +67,10 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 				newTrackedVariable referencesTV:
 					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
 			newMethodArgumentsNodes add: newTrackedVariable ].
-	
+	"(self isMethodPresentInWorklist: (implementors at: i))"
 		(self isMethodTreated: (implementors at: i))
 			ifTrue: [
-
+			 
 				(self
 					 retrieveHistoryOf: (implementors at: i)
 					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
@@ -210,8 +210,16 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
-	self analyzeMethod: next.
-		eaHistory addHistory: self context for: next.
+	(self isMethodTreated: next)
+			ifTrue: [
+				(self retrieveHistoryOf: next given: self currentTrackedVars ) ifFalse: [ self analyzeMethod: next. 
+						eaHistory addHistory: self context for: next.
+						] ] ifFalse: [ 
+					self analyzeMethod: next.
+					eaHistory addHistory: self context for: next.
+					 ].
+
+		
 		self context: self removeFirstCtx.
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 		topLevel := false ].

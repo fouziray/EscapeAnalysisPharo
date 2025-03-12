@@ -26,10 +26,8 @@ EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurr
 	historyContext := self restituteContextOf: aCompiledMethod.
 
 	historyVarNames :=  historyContext trackedMethodArgs collect: [ :var | var name ].
-	
 	varIntersection := varNodesNames intersection: historyVarNames.
-		                 varIntersection = varNodesNames  ifFalse: [ ^ false ].
-		
+		                 varIntersection size = varNodesNames size ifFalse: [ ^ false ].
 	^ self applyHistoryResults: historyContext trackedMethodArgs on: aCollectionOfVarNodes 
 ]
 

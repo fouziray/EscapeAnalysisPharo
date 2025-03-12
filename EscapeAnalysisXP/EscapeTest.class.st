@@ -577,3 +577,18 @@ EscapeTest >> testcallTwiceWithDifferentArgStatus [
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #p) escapeStatus
 ]
+
+{ #category : 'log of treated methods' }
+EscapeTest >> testrepeatedFunctionCallWithEscapingVars [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #repeatedFunctionCallWithEscapingVars.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #a) escapeStatus.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #col) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus
+]

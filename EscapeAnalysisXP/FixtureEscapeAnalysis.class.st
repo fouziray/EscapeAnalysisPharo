@@ -443,14 +443,9 @@ FixtureEscapeAnalysis >> repeatedFunctionCallWithEscapingVars [
 	temp := FixtureEscapeAnalysis new.
 	col do: [ |tmpInsideBlock | ^ self methodCallsMethodWithReturn: tmpInsideBlock ].
 	self methodWithReturn: Object new.
+	self methodWithReturn: col.
+	self methodWithReturn: temp.
 	^ self methodCallsMethodWithReturn: a
-]
-
-{ #category : 'recursive' }
-FixtureEscapeAnalysis >> repetadFunctionCall [
-	| temp |
-	temp:= FixtureEscapeAnalysis new .
-	temp recursiveFunction.
 ]
 
 { #category : 'tests' }
