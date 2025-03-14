@@ -200,7 +200,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	topLevel := true.
 	context associatedMethod: method.
 	variablesTable := context trackVariables:
-		                  method ast body allTemporaryVariables .
+		                  method ast body allTemporaryVariablesButOnesInBlocks .
 	workList := context extendWorkinglist: method.
 	
 	"	self addCurrentMethodReturnStatus: true."
@@ -607,10 +607,12 @@ then whenever a variable is escaped this must bubble up until the returned varia
 	(referencedTrackedVariables := self blockReferencesTVs: aBlockNode)
 		ifNotEmpty: [
 			trackedBlockNode := self trackVariable: aBlockNode.
-
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
-					 self findVariableByNameSymbol: (self unravelLocalName: v) ]) ]
+					 self findVariableByNameSymbol: (self unravelLocalName: v) ]).
+				
+			self allowedDepth <= self context analysisDepth ifTrue: [ self markVariableAsEscaped: aBlockNode . "marks the block as escaping if it is being parsed at a level superior to the allowed depth"]	
+				 ]
 ]
 
 { #category : 'visiting' }

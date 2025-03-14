@@ -29,9 +29,9 @@ FixtureEscapeAnalysis >> addEscapingVarToTrackedCollection [
 
 { #category : 'instVarAssignedtoNonEscapingObject' }
 FixtureEscapeAnalysis >> allocatedReturnInsideBranch [
-
+	| temp |
 	true ifTrue: [
-		| temp |
+	
 		temp := Point new.
 		^ self returnA: temp ]
 ]
