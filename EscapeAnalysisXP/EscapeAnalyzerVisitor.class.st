@@ -214,7 +214,8 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 			ifTrue: [
 				(self retrieveHistoryOf: next given: self currentTrackedVars ) ifFalse: [ self analyzeMethod: next. 
 						eaHistory addHistory: self context for: next.
-						] ] ifFalse: [ 
+						].
+					 ] ifFalse: [ 
 					self analyzeMethod: next.
 					eaHistory addHistory: self context for: next.
 					 ].
@@ -414,9 +415,9 @@ EscapeAnalyzerVisitor >> reset [
 	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
-	eaHistory := EscapeAnalysisHistory new.
+	"eaHistory := EscapeAnalysisHistory new."
 	"allowedDepth := 3."
-	analysisStats := AnalysisStats new.
+	"analysisStats := AnalysisStats new."
 	ctxCounter := 0
 ]
 
@@ -557,7 +558,8 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				
 				(aNode value isMessage
  and: [ aNode value selector = #new ] ) ifTrue: [ 
-		self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil).
+	aNode value receiver isGlobalVariable ifTrue: [ self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil). ].
+		
 		aNode value receiver isSelfOrSuperVariable ifTrue: [ self setTypeForPseudoVariable: aNode value receiver inRepresentingObject: abstractVariable ]
 	  ] ifFalse: [
 		aNode value isSelfOrSuperVariable ifTrue: [ 

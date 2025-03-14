@@ -87,6 +87,21 @@ Uncoherent escape status ! This test should work according to the result of the 
 ]
 
 { #category : 'testRealStuff' }
+EscapeTest >> testAnalysisOfparseMapOrListRepresentation [
+"map is defined inside an if then returned at the end.
+We can assume all returned obejcts inside a block escape. Or only in if statement.
+"
+	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		STONReader >> #parseMapOrListRepresentation.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #map) escapeStatus
+
+
+]
+
+{ #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOftestGetNewTab [
 
 "

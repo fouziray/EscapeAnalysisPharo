@@ -41,7 +41,7 @@ ObjectInlining >> allowedDepth: aNumber [
 { #category : 'as yet unclassified' }
 ObjectInlining >> allowedWorklistSize: aSize [
 
-	escapeAnalyzer allowedWorklistSize: aSize 
+	escapeAnalyzer setWorklistLimitation: aSize 
 ]
 
 { #category : 'as yet unclassified' }
