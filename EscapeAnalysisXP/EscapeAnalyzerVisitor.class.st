@@ -200,9 +200,10 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	topLevel := true.
 	context associatedMethod: method.
 	variablesTable := context trackVariables:
-		                  method ast body allTemporaryVariablesButOnesInBlocks .
+		                  method ast body
+			                  allTemporaryVariablesButOnesInBlocks.
 	workList := context extendWorkinglist: method.
-	
+
 	"	self addCurrentMethodReturnStatus: true."
 
 	currentTrackVarsTable := variablesTable.
@@ -210,24 +211,26 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
-	(self isMethodTreated: next)
+		(self isMethodTreated: next)
 			ifTrue: [
-				(self retrieveHistoryOf: next given: self currentTrackedVars ) ifFalse: [ self analyzeMethod: next. 
-						eaHistory addHistory: self context for: next.
-						].
-					 ] ifFalse: [ 
-					self analyzeMethod: next.
-					eaHistory addHistory: self context for: next.
-					 ].
+				(self retrieveHistoryOf: next given: self currentTrackedVars)
+					ifFalse: [
+						self analyzeMethod: next.
+						eaHistory addHistory: self context for: next ] ]
+			ifFalse: [
+				self analyzeMethod: next.
+				eaHistory addHistory: self context for: next ].
 
-		
+
 		self context: self removeFirstCtx.
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 		topLevel := false ].
 	
- 	self resetContxtCounterForCurrentMethod.
 	self addStat: ctxCounter copy of: method.
 	
+	self resetContxtCounterForCurrentMethod.
+
+
 	self context: savedFirstCtxRef
 ]
 
@@ -311,13 +314,12 @@ EscapeAnalyzerVisitor >> incrementContxtCounterForCurrentMethod [
 { #category : 'initialization' }
 EscapeAnalyzerVisitor >> initialize [
 
-	context := EscapeAnalysisContext new.
-	context analysisDepth: 1.
-	context returnStatus: true.
+
+	self rootContextInit.
+	
 	setWorklistLimitation := false.
-	ctxList := OrderedCollection new.
+
 	savedFirstCtxRef := context.
-	self extendCtxList: context.
 	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
@@ -445,6 +447,16 @@ EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
 ]
 
 { #category : 'initialization' }
+EscapeAnalyzerVisitor >> rootContextInit [
+
+	context := EscapeAnalysisContext new.
+	context analysisDepth: 1.
+	context returnStatus: true.
+	ctxList := OrderedCollection new.
+	self extendCtxList: context
+]
+
+{ #category : 'initialization' }
 EscapeAnalyzerVisitor >> setReturnedFlag: aBoolean [
 
 	currentMethodIsReturned := aBoolean
@@ -496,6 +508,12 @@ EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock [
 
 	^ (self blockReferencesTVs: aBlock ) isNotEmpty 
+]
+
+{ #category : 'accessing' }
+EscapeAnalyzerVisitor >> summaryData [
+
+	^ eaHistory history
 ]
 
 { #category : 'testing' }

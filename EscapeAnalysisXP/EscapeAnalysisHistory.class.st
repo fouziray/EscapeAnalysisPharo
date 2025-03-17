@@ -41,6 +41,12 @@ EscapeAnalysisHistory >> applyHistoryResults: historyTrackedArgs on: aCollection
 	^ true
 ]
 
+{ #category : 'accessing' }
+EscapeAnalysisHistory >> history [
+
+	^ history
+]
+
 { #category : 'initialization' }
 EscapeAnalysisHistory >> initialize [
 

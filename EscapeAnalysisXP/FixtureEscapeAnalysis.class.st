@@ -134,6 +134,22 @@ FixtureEscapeAnalysis >> callTwiceReturnOneDifferentVars [
 	^ self returnA: p " the second one which is supposed to mark the p variable as escaped is being ignored"
 ]
 
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> firstAgumentEscapes: firstArgument second: secondArgument [
+	
+	FooGlobalVariable := firstArgument.
+]
+
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> firstCallFrequentMethod [
+
+| trackedTemp secondTrackedTemp |
+
+
+self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
+
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> foo3 [
 
@@ -495,6 +511,16 @@ FixtureEscapeAnalysis >> runComplexWeightedGraph2 [
 
 	astar runFrom: 0.
 	
+]
+
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> secondCallFrequentMethod [
+
+| trackedTemp secondTrackedTemp |
+
+
+self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
+
 ]
 
 { #category : 'nested calls' }
