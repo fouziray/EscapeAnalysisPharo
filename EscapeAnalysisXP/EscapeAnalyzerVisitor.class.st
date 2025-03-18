@@ -144,7 +144,7 @@ EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> checkContexStillTracksAnyVar [
-	^ self context trackedMethodArgs isNotEmpty 
+	^ (self context trackedMethodArgs select: [ :e | e escapeStatus not ]) isNotEmpty 
 ]
 
 { #category : 'as yet unclassified' }
@@ -441,7 +441,8 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 				put: context.
 			" in case the variable is not defined define it"
 			aVariable markEscaped.
-			context trackedMethodArgs: (context trackedMethodArgs select: [ :e | e ~= aVariable ]). 
+			"context trackedMethodArgs: (context trackedMethodArgs select: [ :e | e ~= aVariable ]). "
+			
 			^ true ]
 ]
 
