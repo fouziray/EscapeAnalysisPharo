@@ -61,8 +61,11 @@ TrackedVariable >> initialize [
 { #category : 'accessing' }
 TrackedVariable >> markEscaped [
 
-	self escapeStatus: true.
-	referencedTrackedVariables do: [ :each | each markEscaped ]
+	escapeStatus ifFalse: [
+		self escapeStatus: true.
+		referencedTrackedVariables do: [ :each | each markEscaped ].
+		trackedVarsReferencingSelf do: [ :each | each markEscaped ] ].
+	
 ]
 
 { #category : 'accessing' }

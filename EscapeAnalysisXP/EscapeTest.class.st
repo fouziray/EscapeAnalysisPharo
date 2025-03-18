@@ -40,6 +40,21 @@ EscapeTest >> test2implShouldTreatOnlySelfRelated [
 		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
 ]
 
+{ #category : 'call graph restriction' }
+EscapeTest >> testAnalysisNotPursuedWhenNodesAreEscaping [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #consecutiveCallsSecondShouldNotBeTreated.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #var) escapeStatus.
+	
+	  self assert: escapeAnalyzer ctxListLog size equals: 2.
+	
+]
+
 { #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOfcomplexWeightedGraph4 [
 
@@ -608,6 +623,19 @@ EscapeTest >> testTempVarsNotEscaped [
 		(escapeAnalyzer findVariableByNameSymbol: #point1) escapeStatus.
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #line) escapeStatus
+]
+
+{ #category : 'log of treated methods' }
+EscapeTest >> testUselessWorklistElement [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #alreadyFoundEscapeShouldntTreatOtherMethods.
+	
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus.
+		1 halt.
 ]
 
 { #category : 'tests' }

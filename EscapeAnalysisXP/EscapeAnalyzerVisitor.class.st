@@ -27,7 +27,8 @@ Class {
 		'escapeLog',
 		'workListSizeLimit',
 		'analysisStats',
-		'ctxCounter'
+		'ctxCounter',
+		'ctxListLog'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -46,20 +47,20 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 			                     createMessageContextReturned:
 			                     returnStateOfMessage
 			                     withMethod: implementor.
-		newMethodArguments := (implementor) argumentNames
-			                      asOrderedCollection.
+		newMethodArguments := implementor argumentNames asOrderedCollection.
 		newMethodArguments addFirst: #self.
 		newMethodArguments doWithIndex: [ :argName :index |
 			| newTrackedVariable |
-			newTrackedVariable := newMessageContext trackVariable: argName.
+			
 			(self isTrackedNode: (nodes at: index)) ifTrue: [
+				newTrackedVariable := newMessageContext trackVariable: argName.
 				newTrackedVariable referencesTV:
-					(self findVariableByName: (nodes at: index)) ].
-			newMethodArgumentsNodes add: newTrackedVariable ].
-		(self isMethodTreated: (implementor))
+					(self findVariableByName: (nodes at: index)).
+				newMethodArgumentsNodes add: newTrackedVariable ] ].
+		(self isMethodTreated: implementor)
 			ifTrue: [
 				(self
-					 retrieveHistoryOf: (implementor)
+					 retrieveHistoryOf: implementor
 					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
 			ifFalse: [ self extendCtxList: newMessageContext ] ]
 ]
@@ -142,6 +143,11 @@ EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 ]
 
 { #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> checkContexStillTracksAnyVar [
+	^ self context trackedMethodArgs isNotEmpty 
+]
+
+{ #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> checkMessageAlreadyAddedToWorkingList: aMessageNode [
 
 | indexOfSimilarContextInWorklist indexOfSimilarContextInSummaryList contextWorklist summaryDataList |
@@ -219,6 +225,12 @@ EscapeAnalyzerVisitor >> ctxList [
 	^ ctxList 
 ]
 
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> ctxListLog [
+
+	^ ctxListLog
+]
+
 { #category : 'queries' }
 EscapeAnalyzerVisitor >> currentMethodIsReturned [
 
@@ -250,6 +262,8 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
+	  self reduceTrackNodesInContext.
+		(self checkContexStillTracksAnyVar) ifTrue: [ 
 		(self isMethodTreated: next)
 			ifTrue: [
 				(self retrieveHistoryOf: next given: self currentTrackedVars)
@@ -260,8 +274,9 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 				self analyzeMethod: next.
 				eaHistory addHistory: self context for: next ].
 
-
+ctxListLog add: self context.]ifFalse: ["here is the point the debug the context is not treated"].
 		self context: self removeFirstCtx.
+		
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 		topLevel := false ].
 	
@@ -292,7 +307,7 @@ anASTNode isVariable ifFalse: [
 
 { #category : 'queries' }
 EscapeAnalyzerVisitor >> findVariableByNameSymbol: aVariableName [
-
+"Maybe keep the variables in the tracked list but tag them as non further trackable "
 	^ context findVariableByName: aVariableName
 ]
 
@@ -426,13 +441,24 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 				put: context.
 			" in case the variable is not defined define it"
 			aVariable markEscaped.
+			context trackedMethodArgs: (context trackedMethodArgs select: [ :e | e ~= aVariable ]). 
 			^ true ]
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> reduceTrackNodesInContext [
+
+self context trackedMethodArgs: (self context trackedMethodArgs select:[ :element | element escapeStatus not])
 ]
 
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> removeFirstCtx [
+|element|
+
 	self incrementContxtCounterForCurrentMethod.
-		ctxList isNotEmpty ifTrue: [ ^ ctxList removeFirst ].
+		ctxList isNotEmpty ifTrue: [ 
+			^ ctxList removeFirst.
+			 ].
 
 	^ nil
 ]
@@ -487,8 +513,24 @@ EscapeAnalyzerVisitor >> rootContextInit [
 	context analysisDepth: 1.
 	context returnStatus: true.
 	ctxList := OrderedCollection new.
+	ctxListLog := OrderedCollection new.
 	self extendCtxList: context.
 	savedFirstCtxRef := context
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
+
+	^ astNodes select: [ :e |
+		  (e isBlock and: [ self shouldTrackBlock: e ])
+			  ifTrue: [
+				  self trackVariable: e.
+				  true ]
+			  ifFalse: [
+				  (self isTrackedNode: e) and: [ (self findVariableByName: e) escapeStatus not 
+					"this should solve the issue of redundant follow-up analysis"]
+				 ] 
+			]
 ]
 
 { #category : 'initialization' }
@@ -563,6 +605,23 @@ EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 EscapeAnalyzerVisitor >> unravelLocalName: agloballyDistinctVariableName [
 
 	^ (agloballyDistinctVariableName splitOn: '_') last
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> updateReturnFlagAndWorklistOfMessage: aMessageNode with: implementors andNodes: nodesToTreat [
+
+	| returnStateOfMessage |
+	returnStateOfMessage := false.
+	((aMessageNode allParents anySatisfy: #isReturn) and: [
+		 self isAtTopLevel ]) ifTrue: [
+		self setReturnedFlag: true.
+		returnStateOfMessage := context returnStatus ].
+	self checkMessageAlreadyAddedToWorkingList: aMessageNode.
+	self
+		addContext: returnStateOfMessage
+		forImplementors: implementors
+		andCallSiteNodes: nodesToTreat.
+	^ self addMethodsToWorkList: implementors
 ]
 
 { #category : 'analyse' }
@@ -655,39 +714,24 @@ then whenever a variable is escaped this must bubble up until the returned varia
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
-	self flag: ' check nodes states before stacking a method to the worklist'.
+	self flag:
+		' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
 
 	implementors := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
-	followTheseNodes := nodesToTreat select: [ :e |
-		                    (e isBlock and: [ self shouldTrackBlock: e ])
-			                    ifTrue: [
-				                    self trackVariable: e.
-				                    true ]
-			                    ifFalse: [
-			                    (self isTrackedNode: e) and: [ e escapeStatus "this should solve the issue of redundant follow-up analysis" ]  ] ].
+	followTheseNodes := self selectFollowedAstNodes: nodesToTreat.
 	followTheseNodes isNotEmpty ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [
 				(self shouldConsiderImplementors: implementors)
 					ifTrue: [
-						| returnStateOfMessage |
-						returnStateOfMessage := false.
-
-						((aMessageNode allParents anySatisfy: #isReturn) and: [
-							 self isAtTopLevel ]) ifTrue: [
-							self setReturnedFlag: true.
-							returnStateOfMessage := context returnStatus ].
-						self checkMessageAlreadyAddedToWorkingList: aMessageNode.
-
 						self
-							addContext: returnStateOfMessage
-							forImplementors: implementors
-							andCallSiteNodes: nodesToTreat.
-
-						self addMethodsToWorkList: implementors ]
+							updateReturnFlagAndWorklistOfMessage: aMessageNode
+							with: implementors
+							andNodes: nodesToTreat 
+							]
 					ifFalse: [
 						(nodesToTreat select: [ :n |
 							 (self findVariableByName: n) isNotNil ]) do: [ :node |
@@ -695,7 +739,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 			ifTrue: [
 				aMessageNode selector = #value ifTrue: [
 					self markVariableAsEscaped: aMessageNode receiver ] ] ].
-		
+
 	aMessageNode children do: [ :node | node acceptVisitor: self ]
 ]
 

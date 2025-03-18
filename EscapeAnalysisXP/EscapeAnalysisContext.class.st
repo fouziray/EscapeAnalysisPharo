@@ -184,6 +184,12 @@ EscapeAnalysisContext >> trackedMethodArgs [
 ]
 
 { #category : 'accessing' }
+EscapeAnalysisContext >> trackedMethodArgs: aCollection [
+
+	currentTrackedVars := aCollection
+]
+
+{ #category : 'accessing' }
 EscapeAnalysisContext >> trackedVariablesTable [
 
 	trackedVariablesTable

@@ -36,6 +36,15 @@ FixtureEscapeAnalysis >> allocatedReturnInsideBranch [
 		^ self returnA: temp ]
 ]
 
+{ #category : 'recursive' }
+FixtureEscapeAnalysis >> alreadyFoundEscapeShouldntTreatOtherMethods [
+
+	| temp a col |
+	self fooSetterToInstance: temp . "this marks temps as escp"
+
+	self returnA: temp. " this should not be treated"
+]
+
 { #category : 'accessing' }
 FixtureEscapeAnalysis >> assignObjectToArrayConstructor [
 
@@ -468,8 +477,9 @@ FixtureEscapeAnalysis >> repeatedFunctionCallWithEscapingVars [
 	| temp a col |
 	temp := FixtureEscapeAnalysis new.
 	col do: [ |tmpInsideBlock | ^ self methodCallsMethodWithReturn: tmpInsideBlock ].
+	col:= FixtureEscapeAnalysis new.
 	self methodWithReturn: Object new.
-	self methodWithReturn: col.
+	col methodWithReturn: 1.
 	self methodWithReturn: temp.
 	^ self methodCallsMethodWithReturn: a
 ]
