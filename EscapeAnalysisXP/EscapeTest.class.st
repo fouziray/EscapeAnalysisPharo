@@ -425,6 +425,37 @@ EscapeTest >> testStaticTypeRestraint [
 ]
 
 { #category : 'analysis summary reuse' }
+EscapeTest >> testSummaryInformationNotReusedUnmatchingTrackingStatus [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #firstCallFrequentMethod.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		
+	  self assert: escapeAnalyzer summaryData size equals: 2.
+
+	escapeAnalyzer rootContextInit.
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #secondCallFrequentMethodUnmatchingTrackStatus:.
+		
+	self assert: escapeAnalyzer summaryData size equals: 3.
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstAgumentEscapes:second:).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#secondCallFrequentMethodUnmatchingTrackStatus: ).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstCallFrequentMethod ).
+		self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+]
+
+{ #category : 'analysis summary reuse' }
 EscapeTest >> testSummaryInformationReuse [
 
 	escapeAnalyzer allowedDepth: 4.

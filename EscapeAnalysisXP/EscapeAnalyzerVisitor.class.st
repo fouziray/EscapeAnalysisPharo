@@ -35,6 +35,36 @@ Class {
 }
 
 { #category : 'visiting' }
+EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: implementors andCallSiteNodes: nodes [
+
+	| newMethodArgumentsNodes |
+	implementors doWithIndex: [ :implementor :i |
+		| newMessageContext newMethodArguments |
+		"(self isMethodPresentInWorklist: (implementors at: i))"
+		newMethodArgumentsNodes := OrderedCollection new.
+		newMessageContext := self
+			                     createMessageContextReturned:
+			                     returnStateOfMessage
+			                     withMethod: implementor.
+		newMethodArguments := (implementor) argumentNames
+			                      asOrderedCollection.
+		newMethodArguments addFirst: #self.
+		newMethodArguments doWithIndex: [ :argName :index |
+			| newTrackedVariable |
+			newTrackedVariable := newMessageContext trackVariable: argName.
+			(self isTrackedNode: (nodes at: index)) ifTrue: [
+				newTrackedVariable referencesTV:
+					(self findVariableByName: (nodes at: index)) ].
+			newMethodArgumentsNodes add: newTrackedVariable ].
+		(self isMethodTreated: (implementor))
+			ifTrue: [
+				(self
+					 retrieveHistoryOf: (implementor)
+					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
+			ifFalse: [ self extendCtxList: newMessageContext ] ]
+]
+
+{ #category : 'visiting' }
 EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors [
 
 	implementors size timesRepeat: [
@@ -43,38 +73,6 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer for
 			                     escapeAnalyzer context.
 		newMessageContext returnStatus: returnStateOfMessage.
 		escapeAnalyzer extendCtxList: newMessageContext ]
-]
-
-{ #category : 'visiting' }
-EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors andCallSiteNodes: nodes [
-
-	1 to: implementors size do: [ :i |
-		| newMessageContext newMethodArguments newMethodArgumentsNodes |
-		newMethodArgumentsNodes := OrderedCollection new.
-		newMessageContext := EAMethodContext new escapeAnalysisContext:
-			                     escapeAnalyzer context.
-		newMessageContext returnStatus: returnStateOfMessage.
-		newMessageContext analysisDepth: context analysisDepth + 1.
-		newMessageContext associatedMethod: (implementors at: i).
-
-		newMethodArguments := (implementors at: i) argumentNames
-			                      asOrderedCollection.
-		newMethodArguments addFirst: #self.
-		newMethodArguments doWithIndex: [ :argName :index |
-			| newTrackedVariable |
-			newTrackedVariable := newMessageContext trackVariable: argName.
-			(escapeAnalyzer isTrackedNode: (nodes at: index)) ifTrue: [
-				newTrackedVariable referencesTV:
-					(escapeAnalyzer findVariableByName: (nodes at: index)) ].
-			newMethodArgumentsNodes add: newTrackedVariable ].
-	"(self isMethodPresentInWorklist: (implementors at: i))"
-		(self isMethodTreated: (implementors at: i))
-			ifTrue: [
-			 
-				(self
-					 retrieveHistoryOf: (implementors at: i)
-					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
-			ifFalse: [ escapeAnalyzer extendCtxList: newMessageContext ] ]
 ]
 
 { #category : 'adding' }
@@ -146,10 +144,18 @@ EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> checkMessageAlreadyAddedToWorkingList: aMessageNode [
 
-| indexOfSimilarContext contextWorklist|
-contextWorklist := ctxList collect: #associatedMethod.
-indexOfSimilarContext := ( contextWorklist collect: #selector ) indexOf: aMessageNode selector.
-( indexOfSimilarContext	 ~= 0 )ifTrue: [ 
+| indexOfSimilarContextInWorklist indexOfSimilarContextInSummaryList contextWorklist summaryDataList |
+contextWorklist := ctxList collect: #associatedMethod. 
+
+summaryDataList := (self summaryData values flatCollect: [ :value |
+  value isCollection 
+    ifTrue: [ value associatedMethod  ] 
+    ifFalse: [ Array with: value associatedMethod  ] ]).
+
+ indexOfSimilarContextInSummaryList:= (summaryDataList collect: #selector) indexOf: aMessageNode selector.
+
+indexOfSimilarContextInWorklist := ( contextWorklist collect: #selector ) indexOf: aMessageNode selector.
+( indexOfSimilarContextInWorklist isZero not | indexOfSimilarContextInSummaryList isZero not )ifTrue: [ 
 		self linkArgumentsOf: aMessageNode.
 		^true.
 		 ].
@@ -172,6 +178,39 @@ EscapeAnalyzerVisitor >> context: anEscapeAnalysisContext [
 EscapeAnalyzerVisitor >> contxtCounterForCurrentMethod [
 
 	^ ctxCounter
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> createMessageContextReturned: returnStateOfMessage withMethod: implementor [
+
+	| newMessageContext |
+	newMessageContext := EAMethodContext new escapeAnalysisContext:
+		                     self context.
+	newMessageContext returnStatus: returnStateOfMessage.
+	newMessageContext analysisDepth: context analysisDepth + 1.
+	newMessageContext associatedMethod: implementor.
+	^ newMessageContext
+]
+
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> createNewMessageContextAndParametersFor: aCompiledMethod andParamsIn: newMethodArguments given: nodesAndNewNodes [
+		|newMessageContext|
+		self flag: 'This unfinished function could replace the createMessagecontextRrturned:withMethod: to Hold more treatements of nodes'.
+		newMethodArguments doWithIndex: [ :argName :index |
+			| newTrackedVariable |
+			newTrackedVariable := newMessageContext trackVariable: argName.
+			(self isTrackedNode: (nodesAndNewNodes first at: index)) ifTrue: [
+				newTrackedVariable referencesTV:
+					(self findVariableByName: (nodesAndNewNodes first at: index)) ].
+			nodesAndNewNodes second  add: newTrackedVariable ].
+	"(self isMethodPresentInWorklist: (implementors at: i))"
+		(self isMethodTreated: aCompiledMethod)
+			ifTrue: [
+			 
+				(self
+					 retrieveHistoryOf: aCompiledMethod 
+					 given: nodesAndNewNodes second) ifTrue: [ ^ self ] ]
+			ifFalse: [ self extendCtxList: newMessageContext ] .
 ]
 
 { #category : 'analyse' }
@@ -283,24 +322,22 @@ EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
 	| receiverAbstarctVariable |
 	receiverAbstarctVariable := self findVariableByName:
 		                            aMessageNode receiver.
-	receiverAbstarctVariable ifNotNil: [
-		receiverAbstarctVariable hasType ifTrue: [
+	receiverAbstarctVariable
+		ifNotNil: [
+			receiverAbstarctVariable hasType ifTrue: [
+				| aSingleMethod |
+				aSingleMethod := receiverAbstarctVariable type lookupSelector:
+					                 aMessageNode selector. "consider reassignment of the var to upper type, then we need to treat all implementations of the hierarchy instead of looking up the first one."
+				aSingleMethod ifNotNil: [ ^ { aSingleMethod } asOrderedCollection ] ] ]
+		ifNil: [
 			| aSingleMethod |
-			aSingleMethod := receiverAbstarctVariable type lookupSelector:
-				                 aMessageNode selector. "consider reassignment of the var to upper type, then we need to treat all implementations of the hierarchy instead of looking up the first one."
-			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection ] ] ]
-	ifNil: [ 
-		aMessageNode receiver isSelfVariable ifTrue: [
-			|aSingleMethod|
-			aSingleMethod :=	self context currentMethod classBinding value lookupSelector:
-				                 aMessageNode selector.
-			aSingleMethod ifNotNil: [ ^{ aSingleMethod} asOrderedCollection].
-			]
-		
-		
-		 ]
-	
-	.
+			aMessageNode receiver isSelfVariable ifTrue: [
+				aSingleMethod := self context currentMethod classBinding value
+					                 lookupSelector: aMessageNode selector ].
+			aMessageNode receiver isSuperVariable ifTrue: [
+				aSingleMethod := self context currentMethod classBinding value
+					                 superclass lookupSelector: aMessageNode selector ].
+			aSingleMethod ifNotNil: [ ^ { aSingleMethod } asOrderedCollection ] ].
 
 	^ aMessageNode selector implementors
 ]
@@ -319,7 +356,6 @@ EscapeAnalyzerVisitor >> initialize [
 	
 	setWorklistLimitation := false.
 
-	savedFirstCtxRef := context.
 	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
@@ -369,8 +405,6 @@ EscapeAnalyzerVisitor >> isVariableEscaped: aName [
 
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> linkArgumentsOf: aMessageNode [
-
-
 
 ]
 
@@ -453,7 +487,8 @@ EscapeAnalyzerVisitor >> rootContextInit [
 	context analysisDepth: 1.
 	context returnStatus: true.
 	ctxList := OrderedCollection new.
-	self extendCtxList: context
+	self extendCtxList: context.
+	savedFirstCtxRef := context
 ]
 
 { #category : 'initialization' }
@@ -639,17 +674,16 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
-	
+
 	implementors := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := nodesToTreat select: [ :e |
-		(e isBlock and: [ self shouldTrackBlock: e ]) ifTrue: [ 
- 				self trackVariable: e.
-				true.
-			 ] ifFalse: [
-			(self findVariableByName: e ) isNotNil
-			].
-		                     ].
+		                    (e isBlock and: [ self shouldTrackBlock: e ])
+			                    ifTrue: [
+				                    self trackVariable: e.
+				                    true ]
+			                    ifFalse: [
+			                    (self findVariableByName: e) isNotNil ] ].
 	followTheseNodes isNotEmpty ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [
@@ -662,11 +696,10 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							 self isAtTopLevel ]) ifTrue: [
 							self setReturnedFlag: true.
 							returnStateOfMessage := context returnStatus ].
-						self checkMessageAlreadyAddedToWorkingList: aMessageNode .
-			
+						self checkMessageAlreadyAddedToWorkingList: aMessageNode.
+
 						self
 							addContext: returnStateOfMessage
-							to: self
 							forImplementors: implementors
 							andCallSiteNodes: nodesToTreat.
 

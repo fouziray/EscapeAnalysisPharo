@@ -523,6 +523,26 @@ self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
 
 ]
 
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> secondCallFrequentMethodUnmatchingTrackStatus [
+
+| trackedTemp secondTrackedTemp |
+
+
+self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
+
+]
+
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> secondCallFrequentMethodUnmatchingTrackStatus: anExternalVarArg [
+
+| trackedTemp secondTrackedTemp |
+
+
+self firstAgumentEscapes: trackedTemp second: anExternalVarArg
+
+]
+
 { #category : 'nested calls' }
 FixtureEscapeAnalysis >> singleImplementation: arg [
 ]

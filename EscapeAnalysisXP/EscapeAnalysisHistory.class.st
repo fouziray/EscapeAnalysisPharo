@@ -12,7 +12,9 @@ Class {
 { #category : 'adding' }
 EscapeAnalysisHistory >> addHistory: aContext for: aCompiledMethod [
 
-	history at: aCompiledMethod put: aContext 
+	history at: aCompiledMethod ifPresent: [ :value | OrderedCollection new add: value; add: aContext ] ifAbsentPut: aContext .
+	
+
 ]
 
 { #category : 'adding' }
@@ -35,8 +37,8 @@ EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurr
 EscapeAnalysisHistory >> applyHistoryResults: historyTrackedArgs on: aCollectionOfVarNodes [
 
 	aCollectionOfVarNodes do: [ :varNode |
-		varNode escapeStatus: (historyTrackedArgs select:
-				 [ :oldNode | oldNode name = varNode name ]) first escapeStatus ].
+		( (historyTrackedArgs select:
+				 [ :oldNode | oldNode name = varNode name ]) first escapeStatus) ifTrue:[ varNode markEscaped ].].
 
 	^ true
 ]
