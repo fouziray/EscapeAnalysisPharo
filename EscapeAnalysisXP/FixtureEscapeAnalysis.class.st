@@ -134,6 +134,16 @@ FixtureEscapeAnalysis >> callTwiceReturnOneDifferentVars [
 	^ self returnA: p " the second one which is supposed to mark the p variable as escaped is being ignored"
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> consecutiveCallsSecondShouldNotBeTreated [
+
+	| var |
+	self fooSetterToInstance: var.
+	self returnA: var
+
+	"this one has a argument that is already escaping. We can elagate this branch. But we only get that information on the next iteration of the worklist. how can we anticipate ? we can mark the newly created context relative to returnA as non resolved arguments, after the full pass on the method body the var is resolved. it should also notify its referencers of this change. This should trigger a control process in the context that checks its tracked variables states. in case they all escaped -> deletes itself from the worklist "
+]
+
 { #category : 'analysis summary ' }
 FixtureEscapeAnalysis >> firstAgumentEscapes: firstArgument second: secondArgument [
 	

@@ -123,6 +123,37 @@ Uncoherent escape status ! This test should work according to the result of the 
 
 ]
 
+{ #category : 'call graph restriction' }
+EscapeTest >> testAnalysisPursuesWhenNodesAreEscaping [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #consecutiveCallsSecondShouldNotBeTreated.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		
+	  self assert: escapeAnalyzer summaryData size equals: 2.
+
+	escapeAnalyzer rootContextInit.
+
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #secondCallFrequentMethodUnmatchingTrackStatus:.
+		
+	self assert: escapeAnalyzer summaryData size equals: 3.
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstAgumentEscapes:second:).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#secondCallFrequentMethodUnmatchingTrackStatus: ).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstCallFrequentMethod ).
+		self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+]
+
 { #category : 'tests' }
 EscapeTest >> testAppendEscapingVarToCollection [
 

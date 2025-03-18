@@ -655,6 +655,7 @@ then whenever a variable is escaped this must bubble up until the returned varia
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
+	self flag: ' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
 
@@ -666,7 +667,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 				                    self trackVariable: e.
 				                    true ]
 			                    ifFalse: [
-			                    (self findVariableByName: e) isNotNil ] ].
+			                    (self isTrackedNode: e) and: [ e escapeStatus "this should solve the issue of redundant follow-up analysis" ]  ] ].
 	followTheseNodes isNotEmpty ifTrue: [
 		(self isSpecialMethod: aMessageNode selector)
 			ifFalse: [
@@ -694,7 +695,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 			ifTrue: [
 				aMessageNode selector = #value ifTrue: [
 					self markVariableAsEscaped: aMessageNode receiver ] ] ].
-
+		
 	aMessageNode children do: [ :node | node acceptVisitor: self ]
 ]
 
