@@ -571,23 +571,6 @@ EscapeAnalyzerVisitor >> updateTrackedVariableName: association forMethod: metho
 	trackVariableNameChanges at: methodName update: [ :v | v add: association ] initial: [  OrderedCollection newFrom: {association}].
 ]
 
-{ #category : 'analyse' }
-EscapeAnalyzerVisitor >> upperMostDeclarationName: name [
-
-	| upperMostDeclarationOfName |
-	upperMostDeclarationOfName := name.
-
-	(trackVariableNameChanges isNotNil and: [ treatedMethods isNotEmpty ]) ifTrue: [
-		
-	[(trackVariableNameChanges at: (treatedMethods  last selector) ifPresent:[ (trackVariableNameChanges at: (treatedMethods  last selector)) detect: [ :association | association key = upperMostDeclarationOfName ] ifNone: [ false ] ]  )  ]
-		whileTrue: [
-		
-			upperMostDeclarationOfName := trackVariableNameChanges at:
-				                              upperMostDeclarationOfName ].
-	].
-	^ upperMostDeclarationOfName
-]
-
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> variablesTable [
 	^ variablesTable

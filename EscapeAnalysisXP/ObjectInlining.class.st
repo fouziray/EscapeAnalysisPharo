@@ -221,35 +221,6 @@ ObjectInlining >> mergeMethods: methods of: inlinedObject in: containerClass tv:
 ]
 
 { #category : 'as yet unclassified' }
-ObjectInlining >> mergeMethodsOfContainedObjectClass: inlinedObject inContainer: aCompiledMethod [
-
-	| containerClass contextOfMethod|
-	containerClass := aCompiledMethod .
-	inlinedObject methods do: [ :singleMethod |
-		| copyAst rewriter contextHistory |
-		copyAst := singleMethod ast copy.
-		copyAst selector:
-			#inlined_ , inlinedObject name , #_ , singleMethod selector.
-
-		copyAst instanceVariableNodes do: [ :instVar |
-			| newInstanceVarName |
-			newInstanceVarName := self
-				                      prefixInlinedObject: inlinedObject name
-				                      to: instVar name.
-			rewriter := RBParseTreeRewriter new.
-			rewriter replace: instVar name with: newInstanceVarName.
-			rewriter executeTree: copyAst.
-			(containerClass hasInstVarNamed: newInstanceVarName) ifFalse: [
-				containerClass addInstVarNamed: newInstanceVarName ] ].
-		
-"		(contextOfMethod :=  escapeAnalyzer restituteContextOf: singleMethod ) isNotNil ifTrue:[
-			contextOfMethod trackedMethodArgs select: [ :argVariable | argVariable referencesTrackedVariable:   argVariable  ].
-			 ]."
-		containerClass compile: copyAst newSource ].
-
-]
-
-{ #category : 'as yet unclassified' }
 ObjectInlining >> mergeMethodsOfContainedObjectClass: inlinedObject inContainer: containerClass tv: aTrackedVariable [
 
 	|  methods |
