@@ -200,6 +200,18 @@ EscapeTest >> testAssignObjectToArrayConstructor [
 ]
 
 { #category : 'tests' }
+EscapeTest >> testBlockDefReferencingTV [
+
+	escapeAnalyzer allowedDepth: 5.
+	escapeAnalyzer allowedWorklistSize: 100.
+
+	escapeAnalyzer escapeAnalyze: HandMorph >> #captureEventsUntil:.
+
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #release) escapeStatus
+]
+
+{ #category : 'tests' }
 EscapeTest >> testCollectionNonEscapingInAIAstar [
 	"escapeAnalyzer := EscapeAnalyzer new."
 
