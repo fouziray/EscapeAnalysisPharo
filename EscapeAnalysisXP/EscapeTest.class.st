@@ -514,10 +514,13 @@ EscapeTest >> testSummaryInformationReuse [
 		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp)
 			escapeStatus.
 
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 2.
 	self assert: escapeAnalyzer summaryData size equals: 2.
 
 	escapeAnalyzer rootContextInit.
-1 halt.
+	escapeAnalyzer resetContxtCounterForCurrentMethod.
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 0.	
+	
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #secondCallFrequentMethod.
 
@@ -526,7 +529,7 @@ EscapeTest >> testSummaryInformationReuse [
 				 (FixtureEscapeAnalysis >> #firstAgumentEscapes:second:).
 				 (FixtureEscapeAnalysis >> #secondCallFrequentMethod).
 				 (FixtureEscapeAnalysis >> #firstCallFrequentMethod) }) size equals: escapeAnalyzer summaryData size.
-	self assert: (escapeAnalyzer realNumberOfTreatedContexts)
+	self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 1.
 ]
 
 { #category : 'test - blocks' }

@@ -123,17 +123,16 @@ EscapeAnalyzerVisitor >> analysisStats [
 EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 
 	| savedStateOfReturnFlag |
+	self incrementRealNumberOfTreatedContexts.
 	savedStateOfReturnFlag := self currentMethodIsReturned.
 
 	aMethod ast body children do: [ :child |
 		(child isMessage and: [ child parent isReturn ])
-			ifTrue: [ child acceptVisitor: self ]
 			ifFalse: [
 				self setReturnedFlag: savedStateOfReturnFlag.
 				(child isReturn and: [ topLevel ]) ifTrue: [
-					self setReturnedFlag: true ].
-				child acceptVisitor: self
-				"savedStateOfReturnFlag := self currentMethodIsReturned." ] ]
+					self setReturnedFlag: true ] ].
+		child acceptVisitor: self ]
 ]
 
 { #category : 'visiting' }
@@ -283,8 +282,7 @@ ctxListLog add: self context.] ifFalse: ["here is the point the debug the contex
 	
 	self addStat: ctxCounter copy of: method.
 	
-	self resetContxtCounterForCurrentMethod.
-
+	
 
 	self context: savedFirstCtxRef
 ]

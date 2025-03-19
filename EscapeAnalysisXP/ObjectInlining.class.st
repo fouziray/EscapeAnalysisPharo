@@ -170,6 +170,8 @@ ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 	| methodAssignmentNodes |
 	objectInlineCandidates:= OrderedCollection new.
 	escapeAnalyzer escapeAnalyze: aMethod.
+	escapeAnalyzer resetContxtCounterForCurrentMethod.
+
 	methodAssignmentNodes := aMethod ast body assignmentNodes.
 	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
 		methodAssignmentNodes do: [ :assignemntNode |
