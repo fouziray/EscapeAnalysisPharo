@@ -1,6 +1,6 @@
 Class {
 	#name : 'ASTCodeRefactoringVisitor',
-	#superclass : 'ASTProgramNodeVisitor',
+	#superclass : 'OCProgramNodeVisitor',
 	#instVars : [
 		'trackedVariableNames'
 	],

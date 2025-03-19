@@ -1,7 +1,7 @@
-Extension { #name : 'ASTProgramNode' }
+Extension { #name : 'OCProgramNode' }
 
 { #category : '*EscapeAnalysisXP' }
-ASTProgramNode >> allTemporaryVariablesButOnesInBlocks [
+OCProgramNode >> allTemporaryVariablesButOnesInBlocks [
 	| children |
 	children := self children.
 	children isEmpty ifTrue: [^#()].

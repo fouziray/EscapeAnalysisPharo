@@ -507,24 +507,26 @@ EscapeTest >> testSummaryInformationReuse [
 	escapeAnalyzer allowedDepth: 4.
 	escapeAnalyzer allowedWorklistSize: 100.
 	escapeAnalyzer escapeAnalyze:
-		FixtureEscapeAnalysis
-		>> #firstCallFrequentMethod.
+		FixtureEscapeAnalysis >> #firstCallFrequentMethod.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
 	self deny:
-		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
-		
-	  self assert: escapeAnalyzer summaryData size equals: 2.
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp)
+			escapeStatus.
+
+	self assert: escapeAnalyzer summaryData size equals: 2.
 
 	escapeAnalyzer rootContextInit.
+1 halt.
 	escapeAnalyzer escapeAnalyze:
-		FixtureEscapeAnalysis
-		>> #secondCallFrequentMethod.
-		
+		FixtureEscapeAnalysis >> #secondCallFrequentMethod.
+
 	self assert: escapeAnalyzer summaryData size equals: 3.
-	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstAgumentEscapes:second:).
-	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#secondCallFrequentMethod ).
-	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstCallFrequentMethod )
+	self assert: (escapeAnalyzer summaryData keys intersection: {
+				 (FixtureEscapeAnalysis >> #firstAgumentEscapes:second:).
+				 (FixtureEscapeAnalysis >> #secondCallFrequentMethod).
+				 (FixtureEscapeAnalysis >> #firstCallFrequentMethod) }) size equals: escapeAnalyzer summaryData size.
+	self assert: (escapeAnalyzer realNumberOfTreatedContexts)
 ]
 
 { #category : 'test - blocks' }

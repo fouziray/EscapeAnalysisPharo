@@ -1,7 +1,7 @@
-Extension { #name : 'ASTSequenceNode' }
+Extension { #name : 'OCSequenceNode' }
 
 { #category : '*EscapeAnalysisXP' }
-ASTSequenceNode >> allTemporaryVariablesButOnesInBlocks [
+OCSequenceNode >> allTemporaryVariablesButOnesInBlocks [
 	^(self temporaryNames asOrderedCollection)
 		addAll: super allTemporaryVariablesButOnesInBlocks;
 		yourself

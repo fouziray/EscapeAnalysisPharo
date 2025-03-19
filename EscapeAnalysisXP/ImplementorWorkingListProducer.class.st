@@ -1,6 +1,6 @@
 Class {
 	#name : 'ImplementorWorkingListProducer',
-	#superclass : 'ASTProgramNodeVisitor',
+	#superclass : 'OCProgramNodeVisitor',
 	#instVars : [
 		'implementors',
 		'unresolved'

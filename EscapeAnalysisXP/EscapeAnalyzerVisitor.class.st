@@ -6,7 +6,7 @@ At the entry of the block the tracked variables are checked to see if they are a
 "
 Class {
 	#name : 'EscapeAnalyzerVisitor',
-	#superclass : 'ASTProgramNodeVisitor',
+	#superclass : 'OCProgramNodeVisitor',
 	#instVars : [
 		'workList',
 		'variablesTable',
@@ -28,7 +28,8 @@ Class {
 		'workListSizeLimit',
 		'analysisStats',
 		'ctxCounter',
-		'ctxListLog'
+		'ctxListLog',
+		'realCtxCounter'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -274,7 +275,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 				self analyzeMethod: next.
 				eaHistory addHistory: self context for: next ].
 
-ctxListLog add: self context.]ifFalse: ["here is the point the debug the context is not treated"].
+ctxListLog add: self context.] ifFalse: ["here is the point the debug the context is not treated"].
 		self context: self removeFirstCtx.
 		
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
@@ -363,6 +364,12 @@ EscapeAnalyzerVisitor >> incrementContxtCounterForCurrentMethod [
 	ctxCounter := ctxCounter + 1
 ]
 
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> incrementRealNumberOfTreatedContexts [
+
+	realCtxCounter := realCtxCounter + 1
+]
+
 { #category : 'initialization' }
 EscapeAnalyzerVisitor >> initialize [
 
@@ -377,7 +384,8 @@ EscapeAnalyzerVisitor >> initialize [
 	eaHistory := EscapeAnalysisHistory new.
 	allowedDepth := 3.
 	analysisStats := AnalysisStats new.
-	ctxCounter := 0
+	ctxCounter := 0.
+	realCtxCounter:= 0
 ]
 
 { #category : 'testing' }
@@ -446,6 +454,12 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 			^ true ]
 ]
 
+{ #category : 'analyse' }
+EscapeAnalyzerVisitor >> realNumberOfTreatedContexts [
+
+	^ realCtxCounter
+]
+
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> reduceTrackNodesInContext [
 
@@ -481,13 +495,15 @@ EscapeAnalyzerVisitor >> reset [
 	"eaHistory := EscapeAnalysisHistory new."
 	"allowedDepth := 3."
 	"analysisStats := AnalysisStats new."
-	ctxCounter := 0
+	ctxCounter := 0.
+	realCtxCounter := 0.
 ]
 
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> resetContxtCounterForCurrentMethod [
 
-	 ctxCounter := 0.
+	ctxCounter := 0.
+	realCtxCounter := 0
 ]
 
 { #category : 'testing' }

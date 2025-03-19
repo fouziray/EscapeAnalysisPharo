@@ -1,6 +1,6 @@
 Class {
 	#name : 'VariableListerVisitor',
-	#superclass : 'ASTProgramNodeVisitor',
+	#superclass : 'OCProgramNodeVisitor',
 	#instVars : [
 		'variables'
 	],
