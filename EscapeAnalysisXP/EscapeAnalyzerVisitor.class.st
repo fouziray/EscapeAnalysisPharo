@@ -249,7 +249,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	| next tempVariables currentTrackVarsTable |
 	tempVariables := method ast body temporaryVariables.
 	topLevel := true.
-	context associatedMethod: method.
+	context associatedMethod: method. 
 	variablesTable := context trackVariables:
 		                  method ast body
 			                  allTemporaryVariablesButOnesInBlocks.

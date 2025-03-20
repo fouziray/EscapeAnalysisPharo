@@ -116,6 +116,25 @@ EscapeTest >> testAnalysisOfqueryResult [
 ]
 
 { #category : 'testRealStuff' }
+EscapeTest >> testAnalysisOftestFormTest2 [
+
+"
+	- it should be marked as escaped since it is referenced in the block.
+	
+	Uncoherent escape status ! This test should work according to the result of the analysis. done with config: { depth: 1. worklistLimit: 100 } }
+"
+
+	escapeAnalyzer allowedDepth: 10.
+	escapeAnalyzer allowedWorklistSize: 10000.
+	escapeAnalyzer escapeAnalyze:
+		ZnServerTest >>#testFormTest2.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #client) escapeStatus
+
+
+]
+
+{ #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOftestGetNewTab [
 
 "
@@ -128,11 +147,11 @@ When reaching the conditional block that returns the tabs variable.
 Uncoherent escape status ! This test should work according to the result of the analysis. done with config: { depth: 1. worklistLimit: 100 } }
 "
 
-	escapeAnalyzer allowedDepth: 1.
-	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer allowedDepth: 5.
+	escapeAnalyzer allowedWorklistSize: 10000.
 	escapeAnalyzer escapeAnalyze:
 		AndreasSystemProfilerTest >> #testGetNewTab.
-	self deny:
+	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #tabs) escapeStatus
 
 

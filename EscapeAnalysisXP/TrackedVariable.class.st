@@ -80,6 +80,16 @@ TrackedVariable >> name: aName [
 	name := aName
 ]
 
+{ #category : 'printing' }
+TrackedVariable >> printOn: aStream [
+
+	aStream 
+		nextPutAll: self name;
+		space;
+		nextPutAll: (self escapeStatus ifTrue: [ ' escaping' ] ifFalse: [ 'not escaping' ])
+
+]
+
 { #category : 'as yet unclassified' }
 TrackedVariable >> referencedByTV: aTV [
 
