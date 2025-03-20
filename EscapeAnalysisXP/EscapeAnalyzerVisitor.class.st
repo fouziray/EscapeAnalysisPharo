@@ -348,7 +348,8 @@ EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
 			aMessageNode receiver isSelfVariable ifTrue: [
 				aSingleMethod := self context currentMethod classBinding value
 					                 lookupSelector: aMessageNode selector ].
-			aMessageNode receiver isSuperVariable ifTrue: [
+			(aMessageNode receiver isSuperVariable and:[self context currentMethod classBinding value
+					                 superclass isNotNil]) ifTrue: [
 				aSingleMethod := self context currentMethod classBinding value
 					                 superclass lookupSelector: aMessageNode selector ].
 			aSingleMethod ifNotNil: [ ^ { aSingleMethod } asOrderedCollection ] ].
@@ -683,7 +684,7 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 				ifTrue: [
 					| variableNode |
 					(variableNode := self findVariableByName: aNode variable) ifNil: [
-						variableNode := self trackVariable: aNode variable name ].
+						variableNode := self trackVariable: aNode variable ].
 					variableNode addReferenceToTrackedVariable:
 						(self findVariableByName: aNode value) ] ]
 		ifTrue: [
