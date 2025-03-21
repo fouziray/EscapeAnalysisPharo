@@ -721,9 +721,7 @@ then whenever a variable is escaped this must bubble up until the returned varia
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
 					 self findVariableByNameSymbol: (self unravelLocalName: v) ]).
-				
-			self allowedDepth <= self context analysisDepth ifTrue: [ self markVariableAsEscaped: aBlockNode . "marks the block as escaping if it is being parsed at a level superior to the allowed depth"]	
-				 ]
+			self markVariableAsEscaped: aBlockNode ]
 ]
 
 { #category : 'visiting' }
