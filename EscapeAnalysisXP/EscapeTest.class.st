@@ -55,6 +55,21 @@ EscapeTest >> testAnalysisNotPursuedWhenNodesAreEscaping [
 	
 ]
 
+{ #category : 'call graph restriction' }
+EscapeTest >> testAnalysisNotPursuesWhenNodesAreEscaping2 [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #escArgAfterSetToGlobal.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #a) escapeStatus.
+		
+  	self assert: escapeAnalyzer ctxListLog size equals: 1.
+	
+]
+
 { #category : 'testRealStuff' }
 EscapeTest >> testAnalysisOfcomplexWeightedGraph4 [
 
@@ -164,20 +179,21 @@ EscapeTest >> testAnalysisPursuesWhenNodesAreEscaping [
 	escapeAnalyzer allowedWorklistSize: 100.
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis
-		>> #consecutiveCallsSecondShouldNotBeTreated.
+		>> #firstCallFrequentMethod.
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
 		
 	  self assert: escapeAnalyzer summaryData size equals: 2.
-
+  	self assert: escapeAnalyzer ctxListLog size equals: 2.
 	escapeAnalyzer rootContextInit.
-
+	
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis
 		>> #secondCallFrequentMethodUnmatchingTrackStatus:.
-		
+		self assert: escapeAnalyzer ctxListLog size equals: 2.
+	
 	self assert: escapeAnalyzer summaryData size equals: 3.
 	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstAgumentEscapes:second:).
 	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#secondCallFrequentMethodUnmatchingTrackStatus: ).
@@ -185,7 +201,39 @@ EscapeTest >> testAnalysisPursuesWhenNodesAreEscaping [
 		self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
 		self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp2) escapeStatus.
+]
+
+{ #category : 'call graph restriction' }
+EscapeTest >> testAnalysisPursuesWhenNodesAreEscapingSeparateMethods [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #firstCallFrequentMethod.
+	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		
+	  self assert: escapeAnalyzer summaryData size equals: 2.
+  	self assert: escapeAnalyzer ctxListLog size equals: 2.
+	escapeAnalyzer rootContextInit.
+	
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #secondCallFrequentMethodUnmatchingTrackStatus2:.
+		self assert: escapeAnalyzer ctxListLog size equals: 2.
+	
+	self assert: escapeAnalyzer summaryData size equals: 3.
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstAgumentEscapes:second:).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#secondCallFrequentMethodUnmatchingTrackStatus2: ).
+	self assert: (escapeAnalyzer summaryData includesKey: FixtureEscapeAnalysis >>#firstCallFrequentMethod ).
+		self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
+		self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp2) escapeStatus.
 ]
 
 { #category : 'tests' }

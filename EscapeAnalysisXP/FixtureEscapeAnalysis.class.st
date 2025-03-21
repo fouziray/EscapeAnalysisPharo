@@ -153,6 +153,15 @@ FixtureEscapeAnalysis >> consecutiveCallsSecondShouldNotBeTreated [
 	"this one has a argument that is already escaping. We can elagate this branch. But we only get that information on the next iteration of the worklist. how can we anticipate ? we can mark the newly created context relative to returnA as non resolved arguments, after the full pass on the method body the var is resolved. it should also notify its referencers of this change. This should trigger a control process in the context that checks its tracked variables states. in case they all escaped -> deletes itself from the worklist "
 ]
 
+{ #category : 'tests' }
+FixtureEscapeAnalysis >> escArgAfterSetToGlobal [
+
+	| a |
+	a := #value.
+	FooGlobalVariable:= a.
+	^ self returnA: a
+]
+
 { #category : 'analysis summary ' }
 FixtureEscapeAnalysis >> firstAgumentEscapes: firstArgument second: secondArgument [
 	
@@ -544,22 +553,19 @@ self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
 ]
 
 { #category : 'analysis summary ' }
-FixtureEscapeAnalysis >> secondCallFrequentMethodUnmatchingTrackStatus [
+FixtureEscapeAnalysis >> secondCallFrequentMethodUnmatchingTrackStatus2: anExternalVarArg [
 
-| trackedTemp secondTrackedTemp |
-
-
-self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
-
+	| trackedTemp2 secondTrackedTemp |
+	self firstAgumentEscapes: anExternalVarArg second: trackedTemp2
 ]
 
 { #category : 'analysis summary ' }
 FixtureEscapeAnalysis >> secondCallFrequentMethodUnmatchingTrackStatus: anExternalVarArg [
 
-| trackedTemp secondTrackedTemp |
+| trackedTemp2 secondTrackedTemp |
 
 
-self firstAgumentEscapes: trackedTemp second: anExternalVarArg
+self firstAgumentEscapes: trackedTemp2 second: anExternalVarArg
 
 ]
 

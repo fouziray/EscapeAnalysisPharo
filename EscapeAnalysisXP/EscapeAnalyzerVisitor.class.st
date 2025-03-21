@@ -62,8 +62,13 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 			ifTrue: [
 				(self
 					 retrieveHistoryOf: implementor
-					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ]
-			ifFalse: [ self extendCtxList: newMessageContext ] ]
+					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ].
+		self extendCtxList: newMessageContext	
+			
+			].
+		
+		
+		
 ]
 
 { #category : 'visiting' }
@@ -150,7 +155,7 @@ EscapeAnalyzerVisitor >> checkContexStillTracksAnyVar [
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> checkMessageAlreadyAddedToWorkingList: aMessageNode [
 
-| indexOfSimilarContextInWorklist indexOfSimilarContextInSummaryList contextWorklist summaryDataList |
+| indexOfSimilarContextInWorklist indexOfSimilarContextInSummaryList contextWorklist summaryDataList nodesToTreat|
 contextWorklist := ctxList collect: #associatedMethod. 
 
 summaryDataList := (self summaryData values flatCollect: [ :value |
@@ -161,8 +166,18 @@ summaryDataList := (self summaryData values flatCollect: [ :value |
  indexOfSimilarContextInSummaryList:= (summaryDataList collect: #selector) indexOf: aMessageNode selector.
 
 indexOfSimilarContextInWorklist := ( contextWorklist collect: #selector ) indexOf: aMessageNode selector.
-( indexOfSimilarContextInWorklist isZero not | indexOfSimilarContextInSummaryList isZero not )ifTrue: [ 
+"( indexOfSimilarContextInWorklist isZero not | indexOfSimilarContextInSummaryList isZero not )" "the first condition is for the contexts that have been added to the worklist but not yet treated. We should look at their tracked vars and associated method to match the to-be created context. if they do then do not create the context instead just link the arguments the other ones if they are different. 
+ex
+FOO
+|e b|
+	slef msg: e
+	self msg: b	
+
+"
+nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
+( indexOfSimilarContextInSummaryList isZero not ) ifTrue: [ 
 		self linkArgumentsOf: aMessageNode.
+		"self retrieveHistoryOf:(summaryDataList at: indexOfSimilarContextInSummaryList)  given: nodesToTreat." "this is already done on the level of #escapeanalyse"
 		^true.
 		 ].
 	^false.
@@ -196,27 +211,6 @@ EscapeAnalyzerVisitor >> createMessageContextReturned: returnStateOfMessage with
 	newMessageContext analysisDepth: context analysisDepth + 1.
 	newMessageContext associatedMethod: implementor.
 	^ newMessageContext
-]
-
-{ #category : 'visiting' }
-EscapeAnalyzerVisitor >> createNewMessageContextAndParametersFor: aCompiledMethod andParamsIn: newMethodArguments given: nodesAndNewNodes [
-		|newMessageContext|
-		self flag: 'This unfinished function could replace the createMessagecontextRrturned:withMethod: to Hold more treatements of nodes'.
-		newMethodArguments doWithIndex: [ :argName :index |
-			| newTrackedVariable |
-			newTrackedVariable := newMessageContext trackVariable: argName.
-			(self isTrackedNode: (nodesAndNewNodes first at: index)) ifTrue: [
-				newTrackedVariable referencesTV:
-					(self findVariableByName: (nodesAndNewNodes first at: index)) ].
-			nodesAndNewNodes second  add: newTrackedVariable ].
-	"(self isMethodPresentInWorklist: (implementors at: i))"
-		(self isMethodTreated: aCompiledMethod)
-			ifTrue: [
-			 
-				(self
-					 retrieveHistoryOf: aCompiledMethod 
-					 given: nodesAndNewNodes second) ifTrue: [ ^ self ] ]
-			ifFalse: [ self extendCtxList: newMessageContext ] .
 ]
 
 { #category : 'analyse' }
