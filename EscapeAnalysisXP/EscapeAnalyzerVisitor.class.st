@@ -29,7 +29,8 @@ Class {
 		'analysisStats',
 		'ctxCounter',
 		'ctxListLog',
-		'realCtxCounter'
+		'realCtxCounter',
+		'currentNumberOfUnassignedRefs'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -57,7 +58,16 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 				newTrackedVariable := newMessageContext trackVariable: argName.
 				newTrackedVariable referencesTV:
 					(self findVariableByName: (nodes at: index)).
-				newMethodArgumentsNodes add: newTrackedVariable ] ].
+				newMethodArgumentsNodes add: newTrackedVariable ]
+			ifFalse: [
+				 (self isAllocationMessage: (nodes at: index)) ifTrue: [
+					 newTrackedVariable := newMessageContext trackVariable: argName.
+					newTrackedVariable  referencesTV: (self context trackVariable: ('ooo', currentNumberOfUnassignedRefs asString)).
+					self incrementCurrentNumberOfUnassignedRefs.
+					 ]
+				
+				 ]
+			 ].
 		(self isMethodTreated: implementor)
 			ifTrue: [
 				(self
@@ -147,12 +157,12 @@ EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 		  aBlockNode references: (self unravelLocalName: variable) ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitor >> checkContexStillTracksAnyVar [
 	^ (self context trackedMethodArgs select: [ :e | e escapeStatus not ]) isNotEmpty 
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'adding' }
 EscapeAnalyzerVisitor >> checkMessageAlreadyAddedToWorkingList: aMessageNode [
 
 | indexOfSimilarContextInWorklist indexOfSimilarContextInSummaryList contextWorklist summaryDataList nodesToTreat|
@@ -201,7 +211,7 @@ EscapeAnalyzerVisitor >> contxtCounterForCurrentMethod [
 	^ ctxCounter
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'pointsTo' }
 EscapeAnalyzerVisitor >> createMessageContextReturned: returnStateOfMessage withMethod: implementor [
 
 	| newMessageContext |
@@ -231,6 +241,12 @@ EscapeAnalyzerVisitor >> currentMethodIsReturned [
 	^ currentMethodIsReturned ifNil:[ false ]
 ]
 
+{ #category : 'initialization' }
+EscapeAnalyzerVisitor >> currentNumberOfUnassignedRefs [
+	currentNumberOfUnassignedRefs := currentNumberOfUnassignedRefs + 1.
+	savedFirstCtxRef := context
+]
+
 { #category : 'accessing' }
 EscapeAnalyzerVisitor >> currentTrackedVars [
 
@@ -256,6 +272,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
+	
 	  self reduceTrackNodesInContext.
 		(self checkContexStillTracksAnyVar) ifTrue: [ 
 		(self isMethodTreated: next)
@@ -324,7 +341,7 @@ EscapeAnalyzerVisitor >> history [
 	^ eaHistory 
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'pointsTo' }
 EscapeAnalyzerVisitor >> implementorsOfAstMessage: aMessageNode [
 
 	| receiverAbstarctVariable |
@@ -357,6 +374,12 @@ EscapeAnalyzerVisitor >> incrementContxtCounterForCurrentMethod [
 	ctxCounter := ctxCounter + 1
 ]
 
+{ #category : 'initialization' }
+EscapeAnalyzerVisitor >> incrementCurrentNumberOfUnassignedRefs [
+	currentNumberOfUnassignedRefs := currentNumberOfUnassignedRefs + 1.
+	
+]
+
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> incrementRealNumberOfTreatedContexts [
 
@@ -379,6 +402,13 @@ EscapeAnalyzerVisitor >> initialize [
 	analysisStats := AnalysisStats new.
 	ctxCounter := 0.
 	realCtxCounter:= 0
+]
+
+{ #category : 'pointsTo' }
+EscapeAnalyzerVisitor >> isAllocationMessage: e [
+
+	^ e isMessage ifTrue: [
+		  e receiver isGlobalVariable and: [ e selector = #new ] ] ifFalse: [ false ]
 ]
 
 { #category : 'testing' }
@@ -419,7 +449,7 @@ EscapeAnalyzerVisitor >> isVariableEscaped: aName [
 	^ savedFirstCtxRef isVariableEscaped: aName
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'pointsTo' }
 EscapeAnalyzerVisitor >> linkArgumentsOf: aMessageNode [
 
 ]
@@ -453,7 +483,7 @@ EscapeAnalyzerVisitor >> realNumberOfTreatedContexts [
 	^ realCtxCounter
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'analyse' }
 EscapeAnalyzerVisitor >> reduceTrackNodesInContext [
 
 self context trackedMethodArgs: (self context trackedMethodArgs select:[ :element | element escapeStatus not])
@@ -508,7 +538,7 @@ EscapeAnalyzerVisitor >> resetThenTrackVariable: aVariableNodeName [
 	^ context trackVariable: aVariableNodeName name
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'history' }
 EscapeAnalyzerVisitor >> retrieveHistoryOf: aCompiledMethod given: argNames [
 
 	^ eaHistory
@@ -525,10 +555,11 @@ EscapeAnalyzerVisitor >> rootContextInit [
 	ctxList := OrderedCollection new.
 	ctxListLog := OrderedCollection new.
 	self extendCtxList: context.
+	currentNumberOfUnassignedRefs := 0.
 	savedFirstCtxRef := context
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'pointsTo' }
 EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
 
 	^ astNodes select: [ :e |
@@ -537,9 +568,14 @@ EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
 				  self trackVariable: e.
 				  true ]
 			  ifFalse: [
+					  (self isAllocationMessage: e ) ifTrue:[
+						
+							true.
+							 ] ifFalse: [   
 				  (self isTrackedNode: e) and: [ (self findVariableByName: e) escapeStatus not 
 					"this should solve the issue of redundant follow-up analysis"]
-				 ] 
+				 ]
+			 ]
 			]
 ]
 
@@ -617,7 +653,7 @@ EscapeAnalyzerVisitor >> unravelLocalName: agloballyDistinctVariableName [
 	^ (agloballyDistinctVariableName splitOn: '_') last
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'pointsTo' }
 EscapeAnalyzerVisitor >> updateReturnFlagAndWorklistOfMessage: aMessageNode with: implementors andNodes: nodesToTreat [
 
 	| returnStateOfMessage |
@@ -654,7 +690,7 @@ EscapeAnalyzerVisitor >> variablesTable: aDictionary [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 
-	(self isTrackedNode: aNode value)
+	(aNode value isVariable and:[self isTrackedNode: aNode value])
 		ifFalse: [
 			self visitNode: aNode value.
 			( self isTrackedNode: aNode variable ) ifTrue: [
@@ -727,7 +763,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
 
-	implementors := self implementorsOfAstMessage: aMessageNode.
+	implementors  := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := self selectFollowedAstNodes: nodesToTreat.
 	followTheseNodes isNotEmpty ifTrue: [

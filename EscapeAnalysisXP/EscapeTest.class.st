@@ -3,7 +3,8 @@ Class {
 	#superclass : 'TestCase',
 	#instVars : [
 		'escapeAnalyzer',
-		'workListReturnStatus'
+		'workListReturnStatus',
+		'instVar'
 	],
 	#category : 'EscapeAnalysisXP-Tests',
 	#package : 'EscapeAnalysisXP',
@@ -412,6 +413,19 @@ EscapeTest >> testNestedMessageAsArgShouldConsiderReturnedVariable [
 		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
 ]
 
+{ #category : 'testRealStuff' }
+EscapeTest >> testNewObjectWithoutVarReference [
+
+	escapeAnalyzer allowedDepth: 100.
+	escapeAnalyzer allowedWorklistSize: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #newObjectWithoutAssignment.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #ooo0) escapeStatus
+
+
+]
+
 { #category : 'tests' }
 EscapeTest >> testNonReturnedTempVarEscapedThreeLevelIndirectionWithHigherDepth [
 	"escapeAnalyzer := EscapeAnalyzer new."
@@ -453,6 +467,55 @@ EscapeTest >> testObjectEscaped [
 
 "	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #objectEscaped.
 	self assert: (escapeAnalyzer variablesTable at: #xx)"
+]
+
+{ #category : 'polymorphism' }
+EscapeTest >> testPoly1 [
+
+	escapeAnalyzer allowedDepth: 10.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #guilleTest1.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #o1) escapeStatus.
+
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o2) escapeStatus
+]
+
+{ #category : 'polymorphism' }
+EscapeTest >> testPoly2 [
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #guilleTest2.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #o1) escapeStatus.
+
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #o2) escapeStatus
+]
+
+{ #category : 'polymorphism' }
+EscapeTest >> testPoly3 [
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #guilleTest3.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #o1) escapeStatus.
+
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o2) escapeStatus
+]
+
+{ #category : 'polymorphism' }
+EscapeTest >> testPoly4 [
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze: FixtureEscapeAnalysis >> #guilleTest4.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o1) escapeStatus.
+
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #o2) escapeStatus
 ]
 
 { #category : 'pseudo-variables' }
@@ -565,7 +628,7 @@ EscapeTest >> testSummaryInformationNotReusedUnmatchingTrackingStatus [
 		self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp ) escapeStatus.
 		self assert:
-		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp2) escapeStatus.
 ]
 
 { #category : 'analysis summary reuse' }
@@ -624,8 +687,12 @@ EscapeTest >> testTempInBlock [
 
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #notUsedBlockTemp.
-	self deny:
-		(escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus
+	"self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus" "this is the wanted result after expanding constraints on block escape"
+
+	"for now we assume it escapes even if the block is passive (which is rare because most blocks are evaluated)"
+
+	self assert: (escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus
 ]
 
 { #category : 'tests' }

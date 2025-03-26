@@ -12,6 +12,12 @@ FixtureEscapeAnalysisEvilTwin >> localMessage: agr [
 	self fooSetterToGlobal: agr
 ]
 
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysisEvilTwin >> polyEscapeOrNot: agr [
+"this escapes"
+	self fooSetterToGlobal: self.
+]
+
 { #category : 'nested calls' }
 FixtureEscapeAnalysisEvilTwin >> receiverMessage [
 ]

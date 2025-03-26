@@ -21,16 +21,30 @@ EscapeAnalysisHistory >> addHistory: aContext for: aCompiledMethod [
 EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurrentArguments: aCollectionOfVarNodes [
 
 	| historyContext varNodesNames historyVarNames varIntersection |
-
 	varNodesNames := aCollectionOfVarNodes collect: [ :varNode |
 		                 varNode name ].
 
 	historyContext := self restituteContextOf: aCompiledMethod.
 
-	historyVarNames :=  historyContext trackedMethodArgs collect: [ :var | var name ].
+	historyVarNames := historyContext trackedMethodArgs collect: [ :var |
+		                   var name ].
 	varIntersection := varNodesNames intersection: historyVarNames.
-		                 varIntersection size = historyVarNames size ifFalse: [ ^ false ].
-	^ self applyHistoryResults: historyContext trackedMethodArgs on: aCollectionOfVarNodes 
+	varIntersection size = historyVarNames size ifFalse: [ ^ false ].
+
+
+
+
+	(historyContext trackedMethodArgs select: [ :histNode |
+		 histNode hasType
+			 ifTrue: [
+				 (aCollectionOfVarNodes select: [ :e |
+					  e name = histNode name and: [ histNode type = e type ] ])
+					 isNotEmpty ]
+			 ifFalse: [	 false ] ]) isEmpty ifTrue: [ ^ false ].
+
+	^ self
+		  applyHistoryResults: historyContext trackedMethodArgs
+		  on: aCollectionOfVarNodes
 ]
 
 { #category : 'adding' }

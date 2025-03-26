@@ -106,7 +106,9 @@ TrackedVariable >> referencesTV: aColOfTv [
 			self type: ((aColOfTv select: #hasType) ifNotEmpty:  [ :e | e first type] ifEmpty: nil) .
 			aColOfTv do: [ :each | each referencedByTV: self ] ]
 		ifFalse: [
+			
 			referencedTrackedVariables add: aColOfTv.
+			self type: aColOfTv type.
 			aColOfTv referencedByTV: self ]
 ]
 

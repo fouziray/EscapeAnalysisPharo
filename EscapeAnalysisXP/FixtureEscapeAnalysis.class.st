@@ -5,7 +5,8 @@ Class {
 		'x',
 		'inst',
 		'inlined_PointInlined_x',
-		'inlined_PointInlined_y'
+		'inlined_PointInlined_y',
+		'instVar'
 	],
 	#category : 'EscapeAnalysisXP-Tests',
 	#package : 'EscapeAnalysisXP',
@@ -66,6 +67,21 @@ FixtureEscapeAnalysis >> assignObjectToInstVarOfNonEscapingObject [
 	temp2 := Line new.
 	temp2 a: temp1.
 	
+]
+
+{ #category : 'tests - blocks' }
+FixtureEscapeAnalysis >> blockValueWithTV [
+
+	| col |
+	col do: [ :arg | FooGlobalVariable := arg ].
+	
+]
+
+{ #category : 'tests - blocks' }
+FixtureEscapeAnalysis >> blockValueWithTV2 [
+
+	| col |
+	[ :arg | FooGlobalVariable := arg ] value: col.
 ]
 
 { #category : 'accessing' }
@@ -172,8 +188,8 @@ FixtureEscapeAnalysis >> firstAgumentEscapes: firstArgument second: secondArgume
 FixtureEscapeAnalysis >> firstCallFrequentMethod [
 
 | trackedTemp secondTrackedTemp |
-
-
+trackedTemp:= Object new.
+secondTrackedTemp := Object new.
 self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
 
 ]
@@ -285,6 +301,46 @@ FixtureEscapeAnalysis >> fooSetterToTemp: h [
 	^ aTemp
 ]
 
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysis >> guilleTest1 [
+
+	| o1 o2  |
+	o1 := FixtureEscapeAnalysis new.
+	o2 := FixtureEscapeAnalysisEvilTwin new.
+	self x: o1 arg: Object new. 
+	self x: o2 arg: Object new.
+]
+
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysis >> guilleTest2 [
+
+	| o1 o2  |
+	o1 := FixtureEscapeAnalysis new.
+	o2 := FixtureNiceTriple new.
+	self x: o1 arg: Object new. 
+	self x: o2 arg: Object new.
+]
+
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysis >> guilleTest3 [
+
+	| o1 o2  |
+	o1 := FixtureEscapeAnalysis new.
+	o2 := FixtureEvilQuad new.
+	self x: o1 arg: Object new. 
+	self x: o2 arg: Object new.
+]
+
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysis >> guilleTest4 [
+
+	| o1 o2  |
+	o1 := FixtureEvilQuad new.
+	o2 := FixtureEscapeAnalysisEvilTwin new.
+	self x: o1 arg: Object new. 
+	self x: o2 arg: Object new.
+]
+
 { #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> inlined_PointInlined_pointX [
 
@@ -390,6 +446,12 @@ FixtureEscapeAnalysis >> nestedMessageInArgument2 [
 	self toto: (self fooSetterToGlobal: (self returnA: o))
 ]
 
+{ #category : 'instance creation' }
+FixtureEscapeAnalysis >> newObjectWithoutAssignment [
+|a|
+	self fooSetterToGlobal: Object new 
+]
+
 { #category : 'as yet unclassified' }
 FixtureEscapeAnalysis >> noReturnArgumentMessage [
 
@@ -446,6 +508,12 @@ FixtureEscapeAnalysis >> objectEscaped [
 	xx := Object new.
 	y := xx -> nil.
 	^ self tata: y
+]
+
+{ #category : 'polymorphism' }
+FixtureEscapeAnalysis >> polyEscapeOrNot: anArg [
+
+	  "do nothing " 
 ]
 
 { #category : 'polymorphism' }
@@ -547,6 +615,8 @@ FixtureEscapeAnalysis >> secondCallFrequentMethod [
 
 | trackedTemp secondTrackedTemp |
 
+trackedTemp:= Object new.
+secondTrackedTemp := Object new.
 
 self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
 
@@ -663,6 +733,13 @@ FixtureEscapeAnalysis >> usedBlockReturnsTemp2 [
 	h := [ ^ tempo ]. "non local return"
 	 h .
 	true.
+]
+
+{ #category : 'accessing' }
+FixtureEscapeAnalysis >> x: anObject arg: arg [
+
+	anObject polyEscapeOrNot: arg.
+	
 ]
 
 { #category : 'accessing' }
