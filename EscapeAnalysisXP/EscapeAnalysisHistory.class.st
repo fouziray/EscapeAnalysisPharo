@@ -29,18 +29,10 @@ EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurr
 	historyVarNames := historyContext trackedMethodArgs collect: [ :var |
 		                   var name ].
 	varIntersection := varNodesNames intersection: historyVarNames.
-	varIntersection size = historyVarNames size ifFalse: [ ^ false ].
+	(varIntersection size = historyVarNames size and:[ varIntersection size ~= 0 ]) ifFalse: [ ^ false ].
+(	varIntersection select:[ :sharedName | (historyContext trackedMethodArgs detect: [:v | v name = sharedName ]) type =( (aCollectionOfVarNodes detect: [:v | v name = sharedName ]) type) ]) size = varIntersection size ifFalse: [^ false.].
 
-
-
-
-	(historyContext trackedMethodArgs select: [ :histNode |
-		 histNode hasType
-			 ifTrue: [
-				 (aCollectionOfVarNodes select: [ :e |
-					  e name = histNode name and: [ histNode type = e type ] ])
-					 isNotEmpty ]
-			 ifFalse: [	 false ] ]) isEmpty ifTrue: [ ^ false ].
+	
 
 	^ self
 		  applyHistoryResults: historyContext trackedMethodArgs
@@ -51,8 +43,9 @@ EscapeAnalysisHistory >> adjudicateHistoryRetrievalOf: aCompiledMethod givenCurr
 EscapeAnalysisHistory >> applyHistoryResults: historyTrackedArgs on: aCollectionOfVarNodes [
 
 	aCollectionOfVarNodes do: [ :varNode |
-		( (historyTrackedArgs select:
-				 [ :oldNode | oldNode name = varNode name ]) first escapeStatus) ifTrue:[ varNode markEscaped ].].
+		historyTrackedArgs
+			detect: [ :oldArg | oldArg name = varNode name ]
+			ifFound: [ :e | e escapeStatus ifTrue: [ varNode markEscaped ] ] ].
 
 	^ true
 ]

@@ -62,6 +62,7 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 			ifFalse: [
 				 (self isAllocationMessage: (nodes at: index)) ifTrue: [
 					 newTrackedVariable := newMessageContext trackVariable: argName.
+					newTrackedVariable type:  (nodes at: index) receiver.
 					newTrackedVariable  referencesTV: (self context trackVariable: ('ooo', currentNumberOfUnassignedRefs asString)).
 					self incrementCurrentNumberOfUnassignedRefs.
 					 ]
@@ -143,11 +144,13 @@ EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 
 	aMethod ast body children do: [ :child |
 		(child isMessage and: [ child parent isReturn ])
+			ifTrue: [ child acceptVisitor: self ]
 			ifFalse: [
 				self setReturnedFlag: savedStateOfReturnFlag.
 				(child isReturn and: [ topLevel ]) ifTrue: [
-					self setReturnedFlag: true ] ].
-		child acceptVisitor: self ]
+					self setReturnedFlag: true ].
+				child acceptVisitor: self.
+				savedStateOfReturnFlag := self currentMethodIsReturned ] ]
 ]
 
 { #category : 'visiting' }
@@ -259,10 +262,11 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	| next tempVariables currentTrackVarsTable |
 	tempVariables := method ast body temporaryVariables.
 	topLevel := true.
-	context associatedMethod: method. 
+	context associatedMethod: method.
 	variablesTable := context trackVariables:
 		                  method ast body
 			                  allTemporaryVariablesButOnesInBlocks.
+	"variablesTable add: (context trackVariable: 'self')."
 	workList := context extendWorkinglist: method.
 
 	"	self addCurrentMethodReturnStatus: true."
@@ -272,28 +276,30 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 	[
 	self context isNotNil and: [
 		(next := context currentMethod) isNotNil ] ] whileTrue: [
-	
-	  self reduceTrackNodesInContext.
-		(self checkContexStillTracksAnyVar) ifTrue: [ 
-		(self isMethodTreated: next)
+		self reduceTrackNodesInContext.
+		self checkContexStillTracksAnyVar
 			ifTrue: [
-				(self retrieveHistoryOf: next given: self currentTrackedVars)
+				(self isMethodTreated: next)
+					ifTrue: [
+						(self retrieveHistoryOf: next given: self currentTrackedVars)
+							ifFalse: [
+								self analyzeMethod: next.
+								eaHistory addHistory: self context for: next ] ]
 					ifFalse: [
 						self analyzeMethod: next.
-						eaHistory addHistory: self context for: next ] ]
-			ifFalse: [
-				self analyzeMethod: next.
-				eaHistory addHistory: self context for: next ].
+						eaHistory addHistory: self context for: next ].
 
-ctxListLog add: self context.] ifFalse: ["here is the point the debug the context is not treated"].
+				ctxListLog add: self context ]
+			ifFalse: [ "here is the point the debug the context is not treated"
+			 ].
 		self context: self removeFirstCtx.
-		
+
 		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
 		topLevel := false ].
-	
+
 	self addStat: ctxCounter copy of: method.
-	
-	
+
+
 
 	self context: savedFirstCtxRef
 ]
@@ -568,15 +574,14 @@ EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
 				  self trackVariable: e.
 				  true ]
 			  ifFalse: [
-					  (self isAllocationMessage: e ) ifTrue:[
-						
-							true.
-							 ] ifFalse: [   
-				  (self isTrackedNode: e) and: [ (self findVariableByName: e) escapeStatus not 
-					"this should solve the issue of redundant follow-up analysis"]
-				 ]
-			 ]
-			]
+				  (self isAllocationMessage: e)
+					  ifTrue: [
+						  true.
+						  ]
+					  ifFalse: [
+						  (self isTrackedNode: e) and: [
+							  (self findVariableByName: e) escapeStatus not
+							  "this should solve the issue of redundant follow-up analysis" ] ] ] .]
 ]
 
 { #category : 'initialization' }

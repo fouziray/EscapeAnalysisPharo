@@ -121,7 +121,7 @@ Uncoherent escape status ! This test should work according to the result of the 
 EscapeTest >> testAnalysisOfqueryResult [
 
 
-	escapeAnalyzer allowedDepth: 1.
+	escapeAnalyzer allowedDepth: 2.
 	escapeAnalyzer allowedWorklistSize: 100.
 	escapeAnalyzer escapeAnalyze:
 		RTNode >> #queryResult:.
