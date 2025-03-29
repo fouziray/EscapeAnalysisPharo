@@ -52,34 +52,43 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 		newMethodArguments := implementor argumentNames asOrderedCollection.
 		newMethodArguments addFirst: #self.
 		newMethodArguments doWithIndex: [ :argName :index |
-			| newTrackedVariable |
-			
-			(self isTrackedNode: (nodes at: index)) ifTrue: [
-				newTrackedVariable := newMessageContext trackVariable: argName.
-				newTrackedVariable referencesTV:
-					(self findVariableByName: (nodes at: index)).
-				newMethodArgumentsNodes add: newTrackedVariable ]
-			ifFalse: [
-				 (self isAllocationMessage: (nodes at: index)) ifTrue: [
-					 newTrackedVariable := newMessageContext trackVariable: argName.
-					newTrackedVariable type:  (nodes at: index) receiver.
-					newTrackedVariable  referencesTV: (self context trackVariable: ('ooo', currentNumberOfUnassignedRefs asString)).
-					self incrementCurrentNumberOfUnassignedRefs.
-					 ]
-				
-				 ]
-			 ].
-		(self isMethodTreated: implementor)
-			ifTrue: [
-				(self
-					 retrieveHistoryOf: implementor
-					 given: newMethodArgumentsNodes) ifTrue: [ ^ self ] ].
-		self extendCtxList: newMessageContext	
-			
-			].
-		
-		
-		
+			| newTrackedVariable sendSiteArg |
+			sendSiteArg := nodes at: index.
+
+			(self isTrackedNode: sendSiteArg)
+				ifTrue: [
+					newTrackedVariable := newMessageContext trackVariable: argName.
+					newTrackedVariable referencesTV:
+						(self findVariableByName: sendSiteArg).
+					newMethodArgumentsNodes add: newTrackedVariable ]
+				ifFalse: [
+					(self isAllocationMessage: sendSiteArg)
+						ifTrue: [
+							newTrackedVariable := newMessageContext trackVariable: argName.
+							newTrackedVariable type: sendSiteArg receiver.
+							newTrackedVariable referencesTV:
+								(self trackUnassignedObj: sendSiteArg).
+							self incrementCurrentNumberOfUnassignedRefs ]
+						ifFalse: [
+							sendSiteArg isMessage ifTrue: [
+								| listOfTrackedArgsInMessage |
+								listOfTrackedArgsInMessage := OrderedCollection new.
+								self
+									selectFollowedAstNodes: {sendSiteArg arguments . sendSiteArg receiver } flattened asOrderedCollection
+									in: listOfTrackedArgsInMessage .
+									listOfTrackedArgsInMessage ifNotNil: [
+									newTrackedVariable := newMessageContext trackVariable: argName. 
+										listOfTrackedArgsInMessage do: [:e | 
+							newTrackedVariable type: sendSiteArg receiver.
+							newTrackedVariable referencesTV: e].
+									
+										].
+									
+									 ] ] ] ].
+		(self isMethodTreated: implementor) ifTrue: [
+			(self retrieveHistoryOf: implementor given: newMethodArgumentsNodes)
+				ifTrue: [ ^ self ] ].
+		self extendCtxList: newMessageContext ]
 ]
 
 { #category : 'visiting' }
@@ -575,13 +584,39 @@ EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
 				  true ]
 			  ifFalse: [
 				  (self isAllocationMessage: e)
-					  ifTrue: [
-						  true.
-						  ]
+					  ifTrue: [ true ]
 					  ifFalse: [
-						  (self isTrackedNode: e) and: [
-							  (self findVariableByName: e) escapeStatus not
-							  "this should solve the issue of redundant follow-up analysis" ] ] ] .]
+						  e isMessage
+							  ifTrue: [ (self selectFollowedAstNodes: (  {e arguments . e receiver } flattened asOrderedCollection )) isNotEmpty. ]
+							  ifFalse: [
+								  (self isTrackedNode: e) and: [
+									  (self findVariableByName: e) escapeStatus not
+									  "this should solve the issue of redundant follow-up analysis" ] ] ] ] ]
+]
+
+{ #category : 'pointsTo' }
+EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes in: col [
+
+	
+	^ astNodes select: [ :e |
+		  (e isBlock and: [ self shouldTrackBlock: e ])
+			  ifTrue: [
+				col add: ( self trackVariable: e).
+				  true ]
+			  ifFalse: [
+				  (self isAllocationMessage: e)
+					  ifTrue: [ true ]
+					  ifFalse: [
+						  e isMessage
+							  ifTrue: [
+								  (self selectFollowedAstNodes: {
+										   e arguments.
+										   e receiver } flattened asOrderedCollection in: col) isNotEmpty ]
+							  ifFalse: [
+								  (self isTrackedNode: e) and: [
+									col add: (self findVariableByName: e).
+									col last escapeStatus not.
+									  "this should solve the issue of redundant follow-up analysis" ] ] ] ] ]
 ]
 
 { #category : 'initialization' }
@@ -642,6 +677,17 @@ EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock [
 EscapeAnalyzerVisitor >> summaryData [
 
 	^ eaHistory history
+]
+
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> trackUnassignedObj: astObjectNew [
+
+	| newTrackedVar |
+	newTrackedVar := self context trackVariable:
+		                 'ooo' , currentNumberOfUnassignedRefs asString.
+	self context unassignedObjAt: astObjectNew put: newTrackedVar.
+
+	^ newTrackedVar
 ]
 
 { #category : 'testing' }
@@ -763,6 +809,8 @@ then whenever a variable is escaped this must bubble up until the returned varia
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
+	"self haltIf: (aMessageNode selector =  #edges:from:to:weight:).
+	self halt."
 	self flag:
 		' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"

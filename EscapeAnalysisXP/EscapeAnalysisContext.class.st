@@ -12,7 +12,8 @@ Class {
 		'associatedMethod',
 		'analysisDepth',
 		'returnStatus',
-		'eaContext'
+		'eaContext',
+		'unassignedObjMap'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -112,7 +113,8 @@ EscapeAnalysisContext >> initialize [
 	workingListIndex := 1.
 	currentTrackedVars := OrderedCollection new.
 	trackedVariablesTable := OrderedCollection new.
-	trackedVariablesTable add: currentTrackedVars
+	trackedVariablesTable add: currentTrackedVars.
+	unassignedObjMap := Dictionary new
 ]
 
 { #category : 'as yet unclassified' }
@@ -206,6 +208,12 @@ EscapeAnalysisContext >> unTrackVariable: anASTNode [
 
 	currentTrackedVars remove: (self findVariableByName: anASTNode name) ifAbsent: [].
 	
+]
+
+{ #category : 'accessing' }
+EscapeAnalysisContext >> unassignedObjAt: astObjectNew put: newTrackedVar [
+
+	unassignedObjMap at: astObjectNew put: newTrackedVar.
 ]
 
 { #category : 'accessing' }

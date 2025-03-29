@@ -355,6 +355,26 @@ EscapeTest >> testFindVariableNameShouldNotFindTheVariable [
 	"Horrible we should have a NullObject in the future."
 ]
 
+{ #category : 'testRealStuff' }
+EscapeTest >> testFlasePositiveEx [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		OCIRTranslatorVisitor>>#pushOuterVectors:. 
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #scopesWithVector) escapeStatus
+]
+
+{ #category : 'testRealStuff' }
+EscapeTest >> testFlasePositiveEx2 [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		RTNode>>#queryResult:. 
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #nodesInPoint) escapeStatus
+]
+
 { #category : 'tests' }
 EscapeTest >> testHGSteamPaint [
 
@@ -393,7 +413,7 @@ EscapeTest >> testMethod [
 	self assert: (escapeAnalyzer findVariableByNameSymbol: #a) escapeStatus 
 ]
 
-{ #category : 'HIGH PRIORITY test embedded messages' }
+{ #category : 'nested calls' }
 EscapeTest >> testNestedMessageAsArg [
 
 	escapeAnalyzer allowedDepth: 10000.
@@ -403,7 +423,7 @@ EscapeTest >> testNestedMessageAsArg [
 		(escapeAnalyzer findVariableByNameSymbol: #o) escapeStatus
 ]
 
-{ #category : 'HIGH PRIORITY test embedded messages' }
+{ #category : 'nested calls' }
 EscapeTest >> testNestedMessageAsArgShouldConsiderReturnedVariable [
 
 	escapeAnalyzer allowedDepth: 1000.

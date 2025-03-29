@@ -598,7 +598,7 @@ FixtureEscapeAnalysis >> runComplexWeightedGraph2 [
 	|graphType graph astar|
 	astar:= AIAstar new.
 	graphType := AICyclicWeightedComplexFixture new.
-	graph :=graphType complexWeightedGraph2.
+	graph := graphType complexWeightedGraph2.
 	astar nodes: graph nodes.
 	astar 
 	   edges: graph edges
