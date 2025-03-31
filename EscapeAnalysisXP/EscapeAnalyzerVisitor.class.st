@@ -660,17 +660,40 @@ EscapeAnalyzerVisitor >> setWorklistLimitation: aSize [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> shouldConsiderImplementors: implementors [
 
-	^ "(self workList size < 3000 ""and: [ implementors size < 5 ]"") and: [
+	^ (setWorklistLimitation
+		   ifTrue: [
+			   self workList size < workListSizeLimit and: [
+				   context analysisDepth < allowedDepth ] ]
+		   ifFalse: [ context analysisDepth < allowedDepth ]) and: [
+		  (self specialMethodsRPF: implementors) not ] "(self workList size < 3000 ""and: [ implementors size < 5 ]"") and: [
 		  context analysisDepth < allowedDepth ]"
- setWorklistLimitation	ifTrue: [ (self workList size < workListSizeLimit ) and: [context analysisDepth < allowedDepth]] ifFalse: [ 
-		(context analysisDepth < allowedDepth ) 
-		]
 ]
 
 { #category : 'asserting' }
 EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock [
 
 	^ (self blockReferencesTVs: aBlock ) isNotEmpty 
+]
+
+{ #category : 'visiting' }
+EscapeAnalyzerVisitor >> specialMethodsRPF: implementors [
+	"means reflective, primitives, ffi methods all are special and could cause escape"
+
+	| isSpecial |
+	isSpecial := false.
+	implementors do: [ :i |
+		i isPrimitive ifTrue: [
+			analysisStats incrNumberOfPrim.
+			isSpecial := true ].
+
+		((i pragmas collect: #selector) includes: #reflection:) ifTrue: [
+			analysisStats incrNumberOfReflection.
+			isSpecial := true ].
+
+		i isFFIMethod ifTrue: [
+			analysisStats incrNumberOfFFI.
+			isSpecial := true ] ].
+	^ isSpecial
 ]
 
 { #category : 'accessing' }
@@ -830,6 +853,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							andNodes: nodesToTreat 
 							]
 					ifFalse: [
+						1 halt.
 						(nodesToTreat select: [ :n |
 							 (self findVariableByName: n) isNotNil ]) do: [ :node |
 							self markVariableAsEscaped: node ] ] ]

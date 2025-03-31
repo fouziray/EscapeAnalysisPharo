@@ -610,6 +610,16 @@ EscapeTest >> testScopeDefinitionDistinction [
 		(escapeAnalyzer findVariableByNameSymbol: #tmp) escapeStatus
 ]
 
+{ #category : 'test - blocks' }
+EscapeTest >> testSelfPassedToBlock [
+
+
+escapeAnalyzer allowedDepth: 300.
+	escapeAnalyzer escapeAnalyze: AthensParagraph >> #drawOnAthensCanvas:bounds:.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #renderer) escapeStatus
+]
+
 { #category : 'testRealStuff' }
 EscapeTest >> testStaticTypeRestraint [
 
