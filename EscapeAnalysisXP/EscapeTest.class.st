@@ -804,7 +804,7 @@ EscapeTest >> testUselessWorklistElement [
 	
 	self assert:
 		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus.
-		1 halt.
+
 ]
 
 { #category : 'tests' }

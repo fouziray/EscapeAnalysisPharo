@@ -119,12 +119,42 @@ ObjectInlining >> initialize [
 ]
 
 { #category : 'tests' }
-ObjectInlining >> inlineRefactorCandidateObjects: inliningCandidates in: aCompiledMethod [
+ObjectInlining >> inlineRefactorCandidateObject: aSingleCandidate in: aCompiledMethod [
+
+	| astClone astCloneChildren inlinedObjectClass |
+	astClone := aCompiledMethod ast copy.
+	astCloneChildren := astClone allChildren.
+
+	inlinedObjectClass := SmalltalkImage current globals at: aSingleCandidate key value receiver name.
+
+	(astCloneChildren select: [ :e | e = aSingleCandidate key ]) do: [ :aCandidate |
+
+		aCandidate value isMessage ifTrue: [
+			self
+				mergeMethodsOfContainedObjectClass: inlinedObjectClass
+				inContainer: aCompiledMethod classBinding value
+				tv: aSingleCandidate value ].
+			aCandidate value replaceWith: (ASTVariableNode named: 'self') 
+	].
+
+	self
+		renamecallSitesOfAst: astClone
+		withArgument: aSingleCandidate value
+		inlinedTo: inlinedObjectClass
+		in: aCompiledMethod classBinding value .
+			
+	astClone selector: #inlined , astClone selector.
+	FixtureEscapeAnalysis compile: astClone asString
+
+]
+
+{ #category : 'tests' }
+ObjectInlining >> inlineRefactorCandidateObjects: aListOfCandidateAssociation in: aCompiledMethod [
 
 	| astClone inlinedObject astCloneChildren |
 	astClone := aCompiledMethod ast copy.
 	astCloneChildren := astClone allChildren.
-	inliningCandidates do: [ :candidate |
+	aListOfCandidateAssociation do: [ :candidate |
 		| inlinedObjectClass |
 		inlinedObjectClass := SmalltalkImage current globals at:
 			                      candidate key value receiver name.
@@ -147,6 +177,14 @@ ObjectInlining >> inlineRefactorCandidateObjects: inliningCandidates in: aCompil
 	astClone selector: #inlined , astClone selector.
 	FixtureEscapeAnalysis compile: astClone asString
 
+
+	"aListOfCandidateAssociation do: [:candidate |
+		| classOfObjectToInline |
+		classOfObjectToInline := SmalltalkImage current globals at: aListOfCandidateAssociation key value receiver name.
+
+		self inlineRefactorClass: classOfObjectToInline withCandidate: candidate in: aCompiledMethod 	
+	]."
+
 ]
 
 { #category : 'tests' }
@@ -162,6 +200,34 @@ ObjectInlining >> inlineRefactorCandidateObjectsUsingVisitor: inliningCandidates
 		inside: aCompiledMethod classBinding value.
 	astClone selector: #inlined , astClone selector.
 	FixtureEscapeAnalysis compile: astClone asString
+]
+
+{ #category : 'tests' }
+ObjectInlining >> inlineRefactorClass: aInlinedObjectClass withCandidate: aSingleCandidate in: aCompiledMethod [
+
+	| astClone astCloneChildren |
+	astClone := aCompiledMethod ast copy.
+	astCloneChildren := astClone allChildren.
+	
+	(astCloneChildren select: [ :e | e = aSingleCandidate key ]) do: [ :aCandidate |
+
+		aCandidate value isMessage ifTrue: [
+			self
+				mergeMethodsOfContainedObjectClass: aInlinedObjectClass
+				inContainer: aCompiledMethod classBinding value
+				tv: aSingleCandidate value ].
+			aCandidate value replaceWith: (ASTVariableNode named: 'self') 
+	].
+
+	self
+		renamecallSitesOfAst: astClone
+		withArgument: aSingleCandidate value
+		inlinedTo: aInlinedObjectClass
+		in: aCompiledMethod classBinding value .
+			
+	astClone selector: #inlined , astClone selector.
+	FixtureEscapeAnalysis compile: astClone asString
+
 ]
 
 { #category : 'testing' }

@@ -704,7 +704,7 @@ EscapeAnalyzerVisitor >> specialMethodsRPF: implementors [
 	| isSpecial |
 	isSpecial := false.
 	implementors do: [ :i |
-		i isPrimitive ifTrue: [
+		i isRealPrimitive ifTrue: [
 			analysisStats incrNumberOfPrim.
 			isSpecial := true ].
 
