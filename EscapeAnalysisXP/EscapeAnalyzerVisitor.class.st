@@ -165,8 +165,8 @@ EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 
-	^ self getTrackVariableNames select: [ :variable |
-		  aBlockNode references: (self unravelLocalName: variable) ]
+	^ context TVs select: [ :variable |
+		  aBlockNode references: (self unravelLocalName: variable name) ]
 ]
 
 { #category : 'analyse' }
@@ -578,30 +578,14 @@ EscapeAnalyzerVisitor >> rootContextInit [
 EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes [
 
 	^ astNodes select: [ :e |
-		  (e isBlock and: [ self shouldTrackBlock: e ])
+		  | varsTrackedByBlock |
+		  varsTrackedByBlock := OrderedCollection new.
+		  (e isBlock and: [
+			   self shouldTrackBlock: e forVar: varsTrackedByBlock ])
 			  ifTrue: [
-				  self trackVariable: e.
-				  true ]
-			  ifFalse: [
-				  (self isAllocationMessage: e)
-					  ifTrue: [ true ]
-					  ifFalse: [
-						  e isMessage
-							  ifTrue: [ (self selectFollowedAstNodes: (  {e arguments . e receiver } flattened asOrderedCollection )) isNotEmpty. ]
-							  ifFalse: [
-								  (self isTrackedNode: e) and: [
-									  (self findVariableByName: e) escapeStatus not
-									  "this should solve the issue of redundant follow-up analysis" ] ] ] ] ]
-]
-
-{ #category : 'pointsTo' }
-EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes in: col [
-
-	
-	^ astNodes select: [ :e |
-		  (e isBlock and: [ self shouldTrackBlock: e ])
-			  ifTrue: [
-				col add: ( self trackVariable: e).
+				  | blockVar |
+				  blockVar := self trackVariable: e.
+				  blockVar referencesTV: varsTrackedByBlock.
 				  true ]
 			  ifFalse: [
 				  (self isAllocationMessage: e)
@@ -611,11 +595,40 @@ EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes in: col [
 							  ifTrue: [
 								  (self selectFollowedAstNodes: {
 										   e arguments.
-										   e receiver } flattened asOrderedCollection in: col) isNotEmpty ]
+										   e receiver } flattened asOrderedCollection) isNotEmpty ]
 							  ifFalse: [
 								  (self isTrackedNode: e) and: [
-									col add: (self findVariableByName: e).
-									col last escapeStatus not.
+									  (self findVariableByName: e) escapeStatus not
+									  "this should solve the issue of redundant follow-up analysis" ] ] ] ] ]
+]
+
+{ #category : 'pointsTo' }
+EscapeAnalyzerVisitor >> selectFollowedAstNodes: astNodes in: col [
+
+	^ astNodes select: [ :e |
+		  | varsTrackedByBlock |
+		  varsTrackedByBlock := OrderedCollection new.
+		  (e isBlock and: [
+			   self shouldTrackBlock: e forVar: varsTrackedByBlock ])
+			  ifTrue: [
+				  col add: (self trackVariable: e).
+				  col last referencesTV: varsTrackedByBlock.
+				  true ]
+			  ifFalse: [
+				  (self isAllocationMessage: e)
+					  ifTrue: [ true ]
+					  ifFalse: [
+						  e isMessage
+							  ifTrue: [
+								  (self
+									   selectFollowedAstNodes: {
+											   e arguments.
+											   e receiver } flattened asOrderedCollection
+									   in: col) isNotEmpty ]
+							  ifFalse: [
+								  (self isTrackedNode: e) and: [
+									  col add: (self findVariableByName: e).
+									  col last escapeStatus not
 									  "this should solve the issue of redundant follow-up analysis" ] ] ] ] ]
 ]
 
@@ -675,6 +688,15 @@ EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock [
 	^ (self blockReferencesTVs: aBlock ) isNotEmpty 
 ]
 
+{ #category : 'asserting' }
+EscapeAnalyzerVisitor >> shouldTrackBlock: aBlock forVar: aCol [
+
+	| referencedVars |
+	referencedVars := self blockReferencesTVs: aBlock.
+	aCol addAll: referencedVars.
+	^ referencedVars isNotEmpty
+]
+
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> specialMethodsRPF: implementors [
 	"means reflective, primitives, ffi methods all are special and could cause escape"
@@ -716,7 +738,7 @@ EscapeAnalyzerVisitor >> trackUnassignedObj: astObjectNew [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 
-	(self isTrackedNode: aVariableNodeName) ifFalse: [
+	((self isTrackedNode: aVariableNodeName) | aVariableNodeName isBlock not) ifFalse: [
 		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName name
 ]
@@ -853,7 +875,6 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							andNodes: nodesToTreat 
 							]
 					ifFalse: [
-						1 halt.
 						(nodesToTreat select: [ :n |
 							 (self findVariableByName: n) isNotNil ]) do: [ :node |
 							self markVariableAsEscaped: node ] ] ]

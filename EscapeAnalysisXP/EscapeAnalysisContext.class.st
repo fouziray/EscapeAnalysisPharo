@@ -26,6 +26,15 @@ EscapeAnalysisContext >> TVNames [
 	^ currentTrackedVars collect: [ :n | n name ]
 ]
 
+{ #category : 'as yet unclassified' }
+EscapeAnalysisContext >> TVs [
+	| col |
+	
+	col := self currentTrackedVars addAll: eaContext TVs.
+	
+	^ col
+]
+
 { #category : 'accessing' }
 EscapeAnalysisContext >> analysisDepth [
 

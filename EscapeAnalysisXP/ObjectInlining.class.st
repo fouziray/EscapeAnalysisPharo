@@ -12,6 +12,17 @@ Class {
 	#tag : 'testInlining'
 }
 
+{ #category : 'as yet unclassified' }
+ObjectInlining class >> detectFalsePositives [
+
+	<script: 'self detectFalsePositives'>
+	
+	| results |
+	
+	results := OrderedCollection new.
+	results inspect
+]
+
 { #category : 'adding' }
 ObjectInlining >> addOIcandidate: anAssignmentNode [
 
