@@ -23,6 +23,55 @@ ObjectInlining class >> detectFalsePositives [
 	results inspect
 ]
 
+{ #category : 'as yet unclassified' }
+ObjectInlining class >> getNewSendsAssignmentsFor: methodAst [
+
+	^ methodAst sendNodes select: [ :m |
+			  m selector = #new and: [
+				  m parent isNotNil and: [ m parent isAssignment ] ] ]
+]
+
+{ #category : 'accessing' }
+ObjectInlining class >> replaceNewNodesWithObject:  sendNodes in: method [
+
+| rewriter |
+
+rewriter := RBParseTreeRewriter new.
+
+"Rewriting the method AST"
+sendNodes collect: [ :n |
+    rewriter 
+        replaceTree: n
+        withTree: (RBLiteralValueNode value: (method compiler 
+            evaluate: n sourceCode)
+        ).
+].
+]
+
+{ #category : 'accessing' }
+ObjectInlining class >> transform: method [
+
+	| rewriter methodAst sendNodes newMethod |
+	"Arguments"
+	methodAst := method parseTree.
+
+	"Collecting new nodes"
+	sendNodes := self getNewSendsAssignmentsFor: methodAst.
+
+
+	"Replacing new nodes with objects"
+	self replaceNewNodesWithObject: sendNodes in: method.
+
+	"Compiles the new method"
+	newMethod := methodAst generateMethod.
+
+	"Installs the newly compiled method in its class of origin"
+	method methodClass
+		addAndClassifySelector: #inlinedd, method selector
+		withMethod: newMethod
+		inProtocol: method protocol
+]
+
 { #category : 'adding' }
 ObjectInlining >> addOIcandidate: anAssignmentNode [
 
@@ -245,18 +294,19 @@ ObjectInlining >> isAssignedTwice: aVariableName in: aMethod [
 ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 
 	| methodAssignmentNodes |
-	objectInlineCandidates:= OrderedCollection new.
+	objectInlineCandidates := OrderedCollection new.
 	escapeAnalyzer escapeAnalyze: aMethod.
 	escapeAnalyzer resetContxtCounterForCurrentMethod.
 
 	methodAssignmentNodes := aMethod ast body assignmentNodes.
 	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
-		methodAssignmentNodes do: [ :assignemntNode |
-			((assignemntNode references: (escapeAnalyzer unravelLocalName: nonEscapingNode name)) and: [
-				 assignemntNode value isMessage
-	ifTrue: [ assignemntNode value selector = #new ]
-	ifFalse: [ false ] ]) ifTrue: [
-				self addOIcandidate: assignemntNode ] ] ]
+			methodAssignmentNodes do: [ :assignemntNode |
+					((assignemntNode references:
+						  (escapeAnalyzer unravelLocalName: nonEscapingNode name)) and: [
+							 assignemntNode value isMessage
+								 ifTrue: [ assignemntNode value selector = #new ]
+								 ifFalse: [ false ] ]) ifTrue: [
+						self addOIcandidate: assignemntNode ] ] ]
 ]
 
 { #category : 'as yet unclassified' }

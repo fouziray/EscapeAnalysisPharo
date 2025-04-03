@@ -16,6 +16,15 @@ EAMethodContext >> TVNames [
 ]
 
 { #category : 'as yet unclassified' }
+EAMethodContext >> TVs [
+	| col |
+	
+	col := currentTrackedVars addAll: eaContext TVs.
+	
+	^ col
+]
+
+{ #category : 'as yet unclassified' }
 EAMethodContext >> escapeAnalysisContext: anEscapeAnalysisContext [
 
 	eaContext := anEscapeAnalysisContext

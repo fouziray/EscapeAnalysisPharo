@@ -165,7 +165,7 @@ EscapeAnalyzerVisitor >> analyzeMethod: aMethod [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> blockReferencesTVs: aBlockNode [
 
-	^ context TVs select: [ :variable |
+	^ context trackedMethodArgs select: [ :variable |
 		  aBlockNode references: (self unravelLocalName: variable name) ]
 ]
 
@@ -501,7 +501,9 @@ EscapeAnalyzerVisitor >> realNumberOfTreatedContexts [
 { #category : 'analyse' }
 EscapeAnalyzerVisitor >> reduceTrackNodesInContext [
 
-self context trackedMethodArgs: (self context trackedMethodArgs select:[ :element | element escapeStatus not])
+	self context trackedMethodArgs:
+		(self context trackedMethodArgs select: [ :element |
+			 element escapeStatus not ])
 ]
 
 { #category : 'analyse' }
@@ -846,7 +848,7 @@ then whenever a variable is escaped this must bubble up until the returned varia
 			trackedBlockNode := self trackVariable: aBlockNode.
 			trackedBlockNode referencesTV:
 				(referencedTrackedVariables collect: [ :v |
-					 self findVariableByNameSymbol: (self unravelLocalName: v) ]).
+					 self findVariableByNameSymbol: (self unravelLocalName: v name) ]).
 			self markVariableAsEscaped: aBlockNode ]
 ]
 

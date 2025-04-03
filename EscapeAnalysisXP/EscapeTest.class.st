@@ -560,7 +560,8 @@ EscapeTest >> testReturnTempInBlock [
 
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #notUsedBlockReturnsTemp.
-	self deny:( (escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus) 
+	"self deny:( (escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus) " "this is optimal"
+	self assert:( (escapeAnalyzer findVariableByNameSymbol: #tempo) escapeStatus) "this is not"
 ]
 
 { #category : 'tests' }
@@ -612,7 +613,6 @@ EscapeTest >> testScopeDefinitionDistinction [
 
 { #category : 'test - blocks' }
 EscapeTest >> testSelfPassedToBlock [
-
 
 escapeAnalyzer allowedDepth: 300.
 	escapeAnalyzer escapeAnalyze: AthensParagraph >> #drawOnAthensCanvas:bounds:.
