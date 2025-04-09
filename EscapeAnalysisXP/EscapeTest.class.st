@@ -406,6 +406,20 @@ EscapeTest >> testInterScopeIdenticalVarNameConfusion [
 	
 ]
 
+{ #category : 'log of treated methods' }
+EscapeTest >> testLoadMetacelloProject [
+
+	escapeAnalyzer allowedDepth: 30.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		MetacelloMonticelloLoader >> #loadProject:.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #project) escapeStatus.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #projectClassInstance)
+			escapeStatus
+]
+
 { #category : 'tests' }
 EscapeTest >> testMethod [
 
@@ -683,6 +697,68 @@ self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 0.
 	
 	escapeAnalyzer escapeAnalyze:
 		FixtureEscapeAnalysis >> #secondCallFrequentMethod.
+
+	self assert: escapeAnalyzer summaryData size equals: 3.
+	self assert: (escapeAnalyzer summaryData keys intersection: {
+				 (FixtureEscapeAnalysis >> #firstAgumentEscapes:second:).
+				 (FixtureEscapeAnalysis >> #secondCallFrequentMethod).
+				 (FixtureEscapeAnalysis >> #firstCallFrequentMethod) }) size equals: escapeAnalyzer summaryData size.
+	self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 1.
+]
+
+{ #category : 'analysis summary reuse' }
+EscapeTest >> testSummaryInformationReuseTypeNilNil [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #firstCallFrequentMethod.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp)
+			escapeStatus.
+
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 2.
+	self assert: escapeAnalyzer summaryData size equals: 2.
+
+	escapeAnalyzer rootContextInit.
+	escapeAnalyzer resetContxtCounterForCurrentMethod.
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 0.	
+	
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #secondCallFrequentMethod.
+
+	self assert: escapeAnalyzer summaryData size equals: 3.
+	self assert: (escapeAnalyzer summaryData keys intersection: {
+				 (FixtureEscapeAnalysis >> #firstAgumentEscapes:second:).
+				 (FixtureEscapeAnalysis >> #secondCallFrequentMethod).
+				 (FixtureEscapeAnalysis >> #firstCallFrequentMethod) }) size equals: escapeAnalyzer summaryData size.
+	self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 1.
+]
+
+{ #category : 'analysis summary reuse' }
+EscapeTest >> testSummaryInformationReuseTypeNiltoTypedCorresponding [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #firstCallFrequentMethod.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #trackedTemp) escapeStatus.
+	self deny:
+		(escapeAnalyzer findVariableByNameSymbol: #secondTrackedTemp)
+			escapeStatus.
+
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 2.
+	self assert: escapeAnalyzer summaryData size equals: 2.
+
+	escapeAnalyzer rootContextInit.
+	escapeAnalyzer resetContxtCounterForCurrentMethod.
+self assert: (escapeAnalyzer realNumberOfTreatedContexts) equals: 0.	
+	
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #aCallWithNilNilTypes .
 
 	self assert: escapeAnalyzer summaryData size equals: 3.
 	self assert: (escapeAnalyzer summaryData keys intersection: {

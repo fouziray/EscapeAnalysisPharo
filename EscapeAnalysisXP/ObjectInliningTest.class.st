@@ -40,18 +40,26 @@ ObjectInliningTest >> testHoneyGinger [
 { #category : 'tests' }
 ObjectInliningTest >> testInliningObjectPoint [
 
-	| candidates astt compiler method candidatesAssociatedWithTV|
+	| candidates astt compiler method candidatesAssociatedWithTV |
 	objInliner allowedDepth: 8.
 	method := FixtureEscapeAnalysis >> #foo:.
 	candidates := objInliner findCandidatesOf: method.
-	candidatesAssociatedWithTV := candidates collect: [ :c | c -> (objInliner escapeAnalyzer  findVariableByNameSymbol:  c variable name) ].
-	objInliner inlineRefactorCandidateObjects: candidatesAssociatedWithTV in: method.
-
-	self assert: candidatesAssociatedWithTV first key equals: (ASTAssignmentNode
-			 variable: (ASTVariableNode named: 'point1')
-			 value: (ASTMessageNode
-					  receiver: (ASTVariableNode named: 'PointInlined')
-					  selector: 'new'))
+	candidatesAssociatedWithTV := candidates collect: [ :c |
+			                              c
+			                              ->
+			                              (objInliner escapeAnalyzer
+				                               findVariableByNameSymbol:
+				                               c variable name) ].
+	objInliner
+		inlineRefactorCandidateObjects: candidatesAssociatedWithTV
+		in: method.
+	self
+		assert: candidatesAssociatedWithTV first key
+		equals: (ASTAssignmentNode
+				 variable: (ASTVariableNode named: 'point1')
+				 value: (ASTMessageNode
+						  receiver: (ASTVariableNode named: 'PointInlined')
+						  selector: 'new'))
 ]
 
 { #category : 'tests' }

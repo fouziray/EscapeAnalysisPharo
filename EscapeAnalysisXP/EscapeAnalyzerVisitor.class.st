@@ -71,6 +71,7 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 							self incrementCurrentNumberOfUnassignedRefs ]
 						ifFalse: [
 							sendSiteArg isMessage ifTrue: [
+								
 								| listOfTrackedArgsInMessage |
 								listOfTrackedArgsInMessage := OrderedCollection new.
 								self
@@ -85,9 +86,9 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 										].
 									
 									 ] ] ] ].
-		(self isMethodTreated: implementor) ifTrue: [
+		"(self isMethodTreated: implementor) ifTrue: [
 			(self retrieveHistoryOf: implementor given: newMethodArgumentsNodes)
-				ifTrue: [ ^ self ] ].
+				ifTrue: [ ^ self ] ]."
 		self extendCtxList: newMessageContext ]
 ]
 
@@ -290,10 +291,10 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 			ifTrue: [
 				(self isMethodTreated: next)
 					ifTrue: [
-						(self retrieveHistoryOf: next given: self currentTrackedVars)
-							ifFalse: [
+						"(self retrieveHistoryOf: next given: self currentTrackedVars)
+							ifFalse: ["
 								self analyzeMethod: next.
-								eaHistory addHistory: self context for: next ] ]
+								eaHistory addHistory: self context for: next "]" ]
 					ifFalse: [
 						self analyzeMethod: next.
 						eaHistory addHistory: self context for: next ].
@@ -307,8 +308,6 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 		topLevel := false ].
 
 	self addStat: ctxCounter copy of: method.
-
-
 
 	self context: savedFirstCtxRef
 ]
@@ -740,7 +739,9 @@ EscapeAnalyzerVisitor >> trackUnassignedObj: astObjectNew [
 { #category : 'testing' }
 EscapeAnalyzerVisitor >> trackVariable: aVariableNodeName [
 
-	((self isTrackedNode: aVariableNodeName) | aVariableNodeName isBlock not) ifFalse: [
+	aVariableNodeName isBlock ifTrue: [
+		^ context trackVariable: aVariableNodeName name ].
+	(self isTrackedNode: aVariableNodeName) ifFalse: [
 		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName name
 ]
@@ -856,8 +857,8 @@ then whenever a variable is escaped this must bubble up until the returned varia
 EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 
 	| implementors nodesToTreat listOfNewTrackedVariableTables followTheseNodes |
-	"self haltIf: (aMessageNode selector =  #edges:from:to:weight:).
-	self halt."
+	
+	
 	self flag:
 		' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"

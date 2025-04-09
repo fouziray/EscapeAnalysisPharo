@@ -19,6 +19,18 @@ FixtureEscapeAnalysis class >> initialize [
 	Smalltalk globals at: #FooGlobalVariable put: nil
 ]
 
+{ #category : 'analysis summary ' }
+FixtureEscapeAnalysis >> aCallWithNilNilTypes [
+
+| trackedTemp secondTrackedTemp |
+
+trackedTemp:= nil.
+secondTrackedTemp := nil.
+
+self firstAgumentEscapes: trackedTemp second: secondTrackedTemp
+
+]
+
 { #category : 'adding' }
 FixtureEscapeAnalysis >> addEscapingVarToTrackedCollection [
 

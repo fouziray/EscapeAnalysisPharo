@@ -40,7 +40,6 @@ TrackedVariable >> escapeStatus [
 
 { #category : 'accessing' }
 TrackedVariable >> escapeStatus: aBoolean [
-
 	escapeStatus := aBoolean
 ]
 
@@ -60,7 +59,6 @@ TrackedVariable >> initialize [
 
 { #category : 'accessing' }
 TrackedVariable >> markEscaped [
-
 	escapeStatus ifFalse: [
 		self escapeStatus: true.
 		referencedTrackedVariables do: [ :each | each markEscaped ].

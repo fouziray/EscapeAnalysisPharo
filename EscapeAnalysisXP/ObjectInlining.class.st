@@ -32,20 +32,16 @@ ObjectInlining class >> getNewSendsAssignmentsFor: methodAst [
 ]
 
 { #category : 'accessing' }
-ObjectInlining class >> replaceNewNodesWithObject:  sendNodes in: method [
+ObjectInlining class >> replaceNewNodesWithObject: sendNodes in: method [
 
-| rewriter |
+	| rewriter |
+	rewriter := RBParseTreeRewriter new.
 
-rewriter := RBParseTreeRewriter new.
-
-"Rewriting the method AST"
-sendNodes collect: [ :n |
-    rewriter 
-        replaceTree: n
-        withTree: (RBLiteralValueNode value: (method compiler 
-            evaluate: n sourceCode)
-        ).
-].
+	"Rewriting the method AST"
+	sendNodes collect: [ :n |
+			n value receiver isGlobalVariable ifTrue: [
+					rewriter replaceTree: n withTree: (RBLiteralValueNode value:
+							 (method compiler evaluate: n value sourceCode)) ] ]
 ]
 
 { #category : 'accessing' }
@@ -66,10 +62,28 @@ ObjectInlining class >> transform: method [
 	newMethod := methodAst generateMethod.
 
 	"Installs the newly compiled method in its class of origin"
-	method methodClass
-		addAndClassifySelector: #inlinedd, method selector
-		withMethod: newMethod
-		inProtocol: method protocol
+	^ newMethod
+]
+
+{ #category : 'accessing' }
+ObjectInlining class >> transform: method withGivenNewNodes: newNodes [
+
+	| rewriter methodAst sendNodes newMethod |
+	"Arguments"
+	methodAst := method parseTree.
+
+	"Collecting new nodes"
+	sendNodes := newNodes.
+
+
+	"Replacing new nodes with objects"
+	self replaceNewNodesWithObject: sendNodes in: method.
+
+	"Compiles the new method"
+	newMethod := methodAst generateMethod.
+
+	"Installs the newly compiled method in its class of origin"
+	^ newMethod
 ]
 
 { #category : 'adding' }
@@ -304,7 +318,7 @@ ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 					((assignemntNode references:
 						  (escapeAnalyzer unravelLocalName: nonEscapingNode name)) and: [
 							 assignemntNode value isMessage
-								 ifTrue: [ assignemntNode value selector = #new ]
+								 ifTrue: [ assignemntNode value selector includesSubstring: #new ]
 								 ifFalse: [ false ] ]) ifTrue: [
 						self addOIcandidate: assignemntNode ] ] ]
 ]
