@@ -510,7 +510,8 @@ EscapeAnalyzerVisitor >> realNumberOfTreatedContexts [
 EscapeAnalyzerVisitor >> reduceAssignmentToItsVar: aVariable [
 
 	| aVar nextVariableToBeAliased |
-	aVar:= self trackVariable: aVariable variable.
+	aVar:= self trackLiteralVariable: aVariable variable.
+	
 	aVariable value isAssignment ifTrue: [
 			aVariable value.
 			aVariable variable.
@@ -762,6 +763,14 @@ EscapeAnalyzerVisitor >> specialMethodsRPF: implementors [
 EscapeAnalyzerVisitor >> summaryData [
 
 	^ eaHistory history
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> trackLiteralVariable: aVariableNodeName [
+
+	(self isTrackedNode: aVariableNodeName) ifFalse: [
+		^ context trackVariable: aVariableNodeName value ].
+	^ context findVariableByName: aVariableNodeName name
 ]
 
 { #category : 'visiting' }
