@@ -319,6 +319,15 @@ EscapeAnalyzerVisitor >> extendCtxList: aContext [
 ]
 
 { #category : 'queries' }
+EscapeAnalyzerVisitor >> findLiteralByName: anASTNode [
+
+anASTNode isLiteralNode ifTrue: [
+	^ context findVariableByName: anASTNode value.
+		 ].
+	^ nil
+]
+
+{ #category : 'queries' }
 EscapeAnalyzerVisitor >> findVariableByName: anASTNode [
 
 anASTNode isVariable ifFalse: [
@@ -495,6 +504,36 @@ EscapeAnalyzerVisitor >> markVariableAsEscaped: aVariableNode [
 EscapeAnalyzerVisitor >> realNumberOfTreatedContexts [
 
 	^ realCtxCounter
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> reduceAssignmentToItsVar: aVariable [
+
+	| aVar nextVariableToBeAliased |
+	aVar:= self trackVariable: aVariable variable.
+	aVariable value isAssignment ifTrue: [
+			aVariable value.
+			aVariable variable.
+			nextVariableToBeAliased := self reduceAssignmentToItsVar:
+				                           aVariable value.
+			(aVar) referencesTV:
+				(self findLiteralByName: nextVariableToBeAliased) ].
+
+
+
+	^ aVariable variable
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> reduceAssignments: nodesToTreat [
+
+	nodesToTreat becomeForward: 
+(	nodesToTreat collect: [ :element |
+			element isAssignment
+				ifTrue: [
+						| tv |
+						self reduceAssignmentToItsVar: element ]
+				ifFalse: [ element ] ])
 ]
 
 { #category : 'analyse' }
@@ -863,7 +902,7 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 		' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
-
+	self reduceAssignments: nodesToTreat .
 	implementors  := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := self selectFollowedAstNodes: nodesToTreat.

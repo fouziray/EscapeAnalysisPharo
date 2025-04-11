@@ -267,6 +267,35 @@ EscapeTest >> testAssignObjectToArrayConstructor [
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
+{ #category : 'example - assignment' }
+EscapeTest >> testAssignVarAsReceiver [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #considerAssignedVarAsReceiver.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #receiver) escapeStatus.
+	
+	
+]
+
+{ #category : 'examples - cascades' }
+EscapeTest >> testCascade [
+
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis
+		>> #considerCascade.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #receiver) escapeStatus.
+	
+	  self assert: escapeAnalyzer ctxListLog size equals: 4.
+	
+]
+
 { #category : 'tests' }
 EscapeTest >> testCollectionNonEscapingInAIAstar [
 	"escapeAnalyzer := EscapeAnalyzer new."
@@ -567,6 +596,49 @@ EscapeTest >> testRecursiveFunction [
 		FixtureEscapeAnalysis >> #recursiveFunction.
 	self deny:
 		(escapeAnalyzer findVariableByNameSymbol: #temp) escapeStatus
+]
+
+{ #category : 'example - assignment' }
+EscapeTest >> testReduceMultipleAssignmentAndTrackAllAssignedWithEach [
+
+	| aVariable |
+	escapeAnalyzer allowedDepth: 4.
+	escapeAnalyzer allowedWorklistSize: 100.
+
+	escapeAnalyzer context associatedMethod: Object >> #yourself.
+	aVariable := OCLiteralValueNode value: 'a'.
+	escapeAnalyzer reduceAssignmentToItsVar:
+		(OCAssignmentNode variable: aVariable value: (OCAssignmentNode
+				  variable: (OCLiteralValueNode value: 'b')
+				  value: (OCMessageNode
+						   receiver: (OCLiteralNode value: 'Object')
+						   selector: 'new'))).
+
+	self
+		assert: (escapeAnalyzer reduceAssignmentToItsVar:
+				 (OCAssignmentNode variable: aVariable value: (OCMessageNode
+						   receiver: (OCLiteralNode value: 'Object')
+						   selector: 'new')))
+		equals: aVariable.
+
+	self assert: escapeAnalyzer context trackedMethodArgs first name
+		= 'Object_yourself_a'
+]
+
+{ #category : 'example - assignment' }
+EscapeTest >> testReduceOneAssignmentToTheVariable [
+
+	| aVariable |
+	aVariable := OCLiteralValueNode value: 'a'.
+
+	escapeAnalyzer allowedDepth: 4.
+
+	escapeAnalyzer allowedWorklistSize: 100.
+	escapeAnalyzer context associatedMethod: Object >> #yourself.
+	escapeAnalyzer reduceAssignmentToItsVar:
+		(OCAssignmentNode variable: aVariable value: (OCMessageNode
+				  receiver: (OCLiteralNode value: 'Object')
+				  selector: 'new'))
 ]
 
 { #category : 'tests' }

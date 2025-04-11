@@ -181,6 +181,23 @@ FixtureEscapeAnalysis >> consecutiveCallsSecondShouldNotBeTreated [
 	"this one has a argument that is already escaping. We can elagate this branch. But we only get that information on the next iteration of the worklist. how can we anticipate ? we can mark the newly created context relative to returnA as non resolved arguments, after the full pass on the method body the var is resolved. it should also notify its referencers of this change. This should trigger a control process in the context that checks its tracked variables states. in case they all escaped -> deletes itself from the worklist "
 ]
 
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> considerAssignedVarAsReceiver [
+|receiver |
+(receiver := Object new) 
+		repository: 1;
+		executeWithContext: 2.
+]
+
+{ #category : 'as yet unclassified' }
+FixtureEscapeAnalysis >> considerCascade [
+
+	| receiver |
+	^ (receiver := FixtureEscapeAnalysis new)
+		toto: 5;
+		yourself.
+]
+
 { #category : 'tests' }
 FixtureEscapeAnalysis >> escArgAfterSetToGlobal [
 
