@@ -835,6 +835,14 @@ EscapeAnalyzerVisitor >> variablesTable: aDictionary [
 ]
 
 { #category : 'visiting' }
+EscapeAnalyzerVisitor >> visitArrayNode: anArrayNode [
+
+	(self currentTrackedVars reject: [ :e | e escapeStatus ]) do: [ :e |
+			(anArrayNode references: (self unravelLocalName: e name)) ifTrue: [
+				e markEscaped ] ]
+]
+
+{ #category : 'visiting' }
 EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 
 	(aNode value isVariable and:[self isTrackedNode: aNode value])
