@@ -30,7 +30,8 @@ Class {
 		'ctxCounter',
 		'ctxListLog',
 		'realCtxCounter',
-		'currentNumberOfUnassignedRefs'
+		'currentNumberOfUnassignedRefs',
+		'iVarEscapeVisitor'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -313,6 +314,56 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method [
 ]
 
 { #category : 'analyse' }
+EscapeAnalyzerVisitor >> escapeAnalyze: method trackingOnly: ocInstanceVariable [
+
+	| next tempVariables currentTrackVarsTable |
+	tempVariables := method ast body temporaryVariables.
+	topLevel := true.
+	context associatedMethod: method.
+	variablesTable := context trackVariable:
+		                  ocInstanceVariable.
+	"variablesTable add: (context trackVariable: 'self')."
+	workList := context extendWorkinglist: method.
+
+	"	self addCurrentMethodReturnStatus: true."
+
+	currentTrackVarsTable := variablesTable.
+	self context: self removeFirstCtx.
+	[
+	self context isNotNil and: [
+		(next := context currentMethod) isNotNil ] ] whileTrue: [
+		self reduceTrackNodesInContext.
+		self checkContexStillTracksAnyVar
+			ifTrue: [
+				(self isMethodTreated: next)
+					ifTrue: [
+						"(self retrieveHistoryOf: next given: self currentTrackedVars)
+							ifFalse: ["
+								self analyzeMethod: next.
+								eaHistory addHistory: self context for: next "]" ]
+					ifFalse: [
+						self analyzeMethod: next.
+						eaHistory addHistory: self context for: next ].
+
+				ctxListLog add: self context ]
+			ifFalse: [ "here is the point the debug the context is not treated"
+			 ].
+		self context: self removeFirstCtx.
+
+		" create a test with two calls for the same method implementeed once , with different tracking statuses for each argument at a time "
+		topLevel := false ].
+
+	self addStat: ctxCounter copy of: method.
+
+	self context: savedFirstCtxRef
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalyzerVisitor >> exploreInstVarUsage: anOCVariableNode [ 
+	iVarEscapeVisitor exploreUsersOf: anOCVariableNode startingFrom: self.
+]
+
+{ #category : 'analyse' }
 EscapeAnalyzerVisitor >> extendCtxList: aContext [
 
 	ctxList add: aContext
@@ -416,7 +467,7 @@ EscapeAnalyzerVisitor >> initialize [
 	self rootContextInit.
 	
 	setWorklistLimitation := false.
-
+	iVarEscapeVisitor:= InstVarUsageExplorer new.
 	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.

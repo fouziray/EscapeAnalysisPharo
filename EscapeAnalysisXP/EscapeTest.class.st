@@ -510,7 +510,7 @@ EscapeTest >> testNonReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirec
 		(escapeAnalyzer findVariableByNameSymbol: #h) escapeStatus
 ]
 
-{ #category : 'testRealStuff' }
+{ #category : 'field sensitivity' }
 EscapeTest >> testObjectEmbeddedInNonEscapingObject [
 
 	escapeAnalyzer allowedDepth: 10000.
