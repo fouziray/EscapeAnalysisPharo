@@ -21,6 +21,6 @@ InstVarUsageExplorer >> exploreUsersOf: anOCVariableNode startingFrom: anEscapeA
 	refsToInstVar methods do: [ :m |
 			escVisitor escapeAnalyze: m trackingOnly: anOCVariableNode.
 			(escVisitor findVariableByNameSymbol: anOCVariableNode name)
-				escapeStatus ifTrue: [ ^ true ] ].
+				escapeStatus ifTrue: [ ^ true ]. " does not have accessors "  ].
 	^ false
 ]

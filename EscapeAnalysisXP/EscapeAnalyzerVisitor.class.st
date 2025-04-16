@@ -320,7 +320,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method trackingOnly: ocInstanceVariable 
 	tempVariables := method ast body temporaryVariables.
 	topLevel := true.
 	context associatedMethod: method.
-	variablesTable := context trackVariable:
+	variablesTable := self trackVariable:
 		                  ocInstanceVariable.
 	"variablesTable add: (context trackVariable: 'self')."
 	workList := context extendWorkinglist: method.
@@ -360,7 +360,7 @@ EscapeAnalyzerVisitor >> escapeAnalyze: method trackingOnly: ocInstanceVariable 
 
 { #category : 'as yet unclassified' }
 EscapeAnalyzerVisitor >> exploreInstVarUsage: anOCVariableNode [ 
-	iVarEscapeVisitor exploreUsersOf: anOCVariableNode startingFrom: self.
+	^ iVarEscapeVisitor exploreUsersOf: anOCVariableNode startingFrom: self.
 ]
 
 { #category : 'analyse' }
@@ -820,7 +820,8 @@ EscapeAnalyzerVisitor >> summaryData [
 EscapeAnalyzerVisitor >> trackLiteralVariable: aVariableNodeName [
 
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
-		^ context trackVariable: aVariableNodeName value ].
+		aVariableNodeName isLiteralNode ifTrue: [ ^ context trackVariable: aVariableNodeName value ] ifFalse: [ ^ context trackVariable: aVariableNodeName name ]
+		 ].
 	^ context findVariableByName: aVariableNodeName name
 ]
 
@@ -931,8 +932,9 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 						self markVariableAsEscaped: aNode value.
 						^ self ].
 				aNode variable isInstanceVariable ifTrue: [
-						self exploreInstVarUsage: aNode variable.
-						self markVariableAsEscaped: aNode value.
+						(self exploreInstVarUsage: aNode variable) ifTrue: [
+							self markVariableAsEscaped: aNode value ].
+						self markVariableAsEscaped: aNode value .
 						^ self ].
 				aNode variable isGlobalVariable ifTrue: [
 						self markVariableAsEscaped: aNode value.
