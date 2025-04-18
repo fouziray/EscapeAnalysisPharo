@@ -13,7 +13,8 @@ Class {
 		'analysisDepth',
 		'returnStatus',
 		'eaContext',
-		'unassignedObjMap'
+		'unassignedObjMap',
+		'callSiteMessage'
 	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
@@ -61,6 +62,18 @@ EscapeAnalysisContext >> associatedMethod [
 EscapeAnalysisContext >> associatedMethod: aCompiledMethod [
 
 	associatedMethod := aCompiledMethod
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalysisContext >> callSiteMessage [
+
+	^ callSiteMessage
+]
+
+{ #category : 'as yet unclassified' }
+EscapeAnalysisContext >> callSiteMessage: aMessageNode [
+
+	callSiteMessage := aMessageNode
 ]
 
 { #category : 'accessing' }
@@ -120,7 +133,8 @@ EscapeAnalysisContext >> initialize [
 	currentTrackedVars := OrderedCollection new.
 	trackedVariablesTable := OrderedCollection new.
 	trackedVariablesTable add: currentTrackedVars.
-	unassignedObjMap := Dictionary new
+	unassignedObjMap := Dictionary new.
+	callSiteMessage := nil
 ]
 
 { #category : 'as yet unclassified' }

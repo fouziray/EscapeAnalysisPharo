@@ -1002,6 +1002,18 @@ escapeAnalyzer allowedDepth: 300.
 
 ]
 
+{ #category : 'field sensitivity' }
+EscapeTest >> testZnClientTest [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		ZnClientTest >> #testIfFailWrongType. 
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #client) escapeStatus.
+		
+	
+]
+
 { #category : 'tests' }
 EscapeTest >> testcallTwiceReturnOneDifferentVars [
 	"A message call whose direct/indirect parent is a ReturnNode should mark its returned variables as ecaping"

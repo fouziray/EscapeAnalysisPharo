@@ -39,69 +39,58 @@ Class {
 }
 
 { #category : 'visiting' }
-EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: implementors andCallSiteNodes: nodes [
+EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: implementors andCallSiteNodes: nodes messageNode: aMessageNode [
 
 	| newMethodArgumentsNodes |
 	implementors doWithIndex: [ :implementor :i |
-		| newMessageContext newMethodArguments |
-		"(self isMethodPresentInWorklist: (implementors at: i))"
-		newMethodArgumentsNodes := OrderedCollection new.
-		newMessageContext := self
-			                     createMessageContextReturned:
-			                     returnStateOfMessage
-			                     withMethod: implementor.
-		newMethodArguments := implementor argumentNames asOrderedCollection.
-		newMethodArguments addFirst: #self.
-		newMethodArguments doWithIndex: [ :argName :index |
-			| newTrackedVariable sendSiteArg |
-			sendSiteArg := nodes at: index.
+			| newMessageContext newMethodArguments |
+			"(self isMethodPresentInWorklist: (implementors at: i))"
+			newMethodArgumentsNodes := OrderedCollection new.
+			newMessageContext := self
+				                     createMessageContextReturned:
+				                     returnStateOfMessage
+				                     withMethod: implementor.
+			newMessageContext callSiteMessage: aMessageNode.
+			newMethodArguments := implementor argumentNames asOrderedCollection.
+			newMethodArguments addFirst: #self.
+			newMethodArguments doWithIndex: [ :argName :index |
+					| newTrackedVariable sendSiteArg |
+					sendSiteArg := nodes at: index.
 
-			(self isTrackedNode: sendSiteArg)
-				ifTrue: [
-					newTrackedVariable := newMessageContext trackVariable: argName.
-					newTrackedVariable referencesTV:
-						(self findVariableByName: sendSiteArg).
-					newMethodArgumentsNodes add: newTrackedVariable ]
-				ifFalse: [
-					(self isAllocationMessage: sendSiteArg)
+					(self isTrackedNode: sendSiteArg)
 						ifTrue: [
-							newTrackedVariable := newMessageContext trackVariable: argName.
-							newTrackedVariable type: sendSiteArg receiver.
-							newTrackedVariable referencesTV:
-								(self trackUnassignedObj: sendSiteArg).
-							self incrementCurrentNumberOfUnassignedRefs ]
+								newTrackedVariable := newMessageContext trackVariable: argName.
+								newTrackedVariable referencesTV:
+									(self findVariableByName: sendSiteArg).
+								newMethodArgumentsNodes add: newTrackedVariable ]
 						ifFalse: [
-							sendSiteArg isMessage ifTrue: [
-								
-								| listOfTrackedArgsInMessage |
-								listOfTrackedArgsInMessage := OrderedCollection new.
-								self
-									selectFollowedAstNodes: {sendSiteArg arguments . sendSiteArg receiver } flattened asOrderedCollection
-									in: listOfTrackedArgsInMessage .
-									listOfTrackedArgsInMessage ifNotNil: [
-									newTrackedVariable := newMessageContext trackVariable: argName. 
-										listOfTrackedArgsInMessage do: [:e | 
-							newTrackedVariable type: sendSiteArg receiver.
-							newTrackedVariable referencesTV: e].
-									
-										].
-									
-									 ] ] ] ].
-		"(self isMethodTreated: implementor) ifTrue: [
+								(self isAllocationMessage: sendSiteArg)
+									ifTrue: [
+											newTrackedVariable := newMessageContext trackVariable:
+												                      argName.
+											newTrackedVariable type: sendSiteArg receiver.
+											newTrackedVariable referencesTV:
+												(self trackUnassignedObj: sendSiteArg).
+											self incrementCurrentNumberOfUnassignedRefs ]
+									ifFalse: [
+											sendSiteArg isMessage ifTrue: [
+													| listOfTrackedArgsInMessage |
+													listOfTrackedArgsInMessage := OrderedCollection new.
+													self
+														selectFollowedAstNodes: {
+																sendSiteArg arguments.
+																sendSiteArg receiver } flattened asOrderedCollection
+														in: listOfTrackedArgsInMessage.
+													listOfTrackedArgsInMessage ifNotNil: [
+															newTrackedVariable := newMessageContext trackVariable:
+																                      argName.
+															listOfTrackedArgsInMessage do: [ :e |
+																	newTrackedVariable type: sendSiteArg receiver.
+																	newTrackedVariable referencesTV: e ] ] ] ] ] ].
+			"(self isMethodTreated: implementor) ifTrue: [
 			(self retrieveHistoryOf: implementor given: newMethodArgumentsNodes)
 				ifTrue: [ ^ self ] ]."
-		self extendCtxList: newMessageContext ]
-]
-
-{ #category : 'visiting' }
-EscapeAnalyzerVisitor >> addContext: returnStateOfMessage to: escapeAnalyzer forImplementors: implementors [
-
-	implementors size timesRepeat: [
-		| newMessageContext |
-		newMessageContext := EAMethodContext new escapeAnalysisContext:
-			                     escapeAnalyzer context.
-		newMessageContext returnStatus: returnStateOfMessage.
-		escapeAnalyzer extendCtxList: newMessageContext ]
+			self extendCtxList: newMessageContext ]
 ]
 
 { #category : 'adding' }
@@ -865,7 +854,8 @@ EscapeAnalyzerVisitor >> updateReturnFlagAndWorklistOfMessage: aMessageNode with
 	self
 		addContext: returnStateOfMessage
 		forImplementors: implementors
-		andCallSiteNodes: nodesToTreat.
+		andCallSiteNodes: nodesToTreat
+		messageNode: aMessageNode.
 	^ self addMethodsToWorkList: implementors
 ]
 
@@ -932,9 +922,11 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 						self markVariableAsEscaped: aNode value.
 						^ self ].
 				aNode variable isInstanceVariable ifTrue: [
-						(self exploreInstVarUsage: aNode variable) ifTrue: [
-							self markVariableAsEscaped: aNode value ].
-						self markVariableAsEscaped: aNode value .
+						(self exploreInstVarUsage: aNode variable)
+							ifTrue: [ 1 halt. 
+								iVarEscapeVisitor isAccessed ifTrue: [ iVarEscapeVisitor exploreSendersOfAccessor: aNode variable name startingFrom: (self context callSiteMessage) ] ifFalse: [ self markVariableAsEscaped: aNode value ].								 ]
+							ifFalse: [ 1 halt ].
+						self markVariableAsEscaped: aNode value.
 						^ self ].
 				aNode variable isGlobalVariable ifTrue: [
 						self markVariableAsEscaped: aNode value.

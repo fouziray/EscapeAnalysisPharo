@@ -1,6 +1,9 @@
 Class {
 	#name : 'InstVarUsageExplorer',
 	#superclass : 'Object',
+	#instVars : [
+		'isAccessed'
+	],
 	#category : 'EscapeAnalysisXP-Core',
 	#package : 'EscapeAnalysisXP',
 	#tag : 'Core'
@@ -21,6 +24,16 @@ InstVarUsageExplorer >> exploreUsersOf: anOCVariableNode startingFrom: anEscapeA
 	refsToInstVar methods do: [ :m |
 			escVisitor escapeAnalyze: m trackingOnly: anOCVariableNode.
 			(escVisitor findVariableByNameSymbol: anOCVariableNode name)
-				escapeStatus ifTrue: [ ^ true ]. " does not have accessors "  ].
+				escapeStatus ifTrue: [ " does not have accessors "
+					m isPrimitive
+						ifTrue: [ isAccessed isNil ifTrue: [ isAccessed := true ] ]
+						ifFalse: [ isAccessed := false ].
+					^ true ] ].
 	^ false
+]
+
+{ #category : 'accessing' }
+InstVarUsageExplorer >> isAccessed [
+
+	^ isAccessed  
 ]
