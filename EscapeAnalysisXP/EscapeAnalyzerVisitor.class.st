@@ -456,7 +456,7 @@ EscapeAnalyzerVisitor >> initialize [
 	self rootContextInit.
 	
 	setWorklistLimitation := false.
-	iVarEscapeVisitor:= InstVarUsageExplorer new.
+	iVarEscapeVisitor:= InstVarUsageExplorer newWithMainVisitor: self.
 	escapeLog := Dictionary new.
 	trackVariableNameChanges := Dictionary new.
 	self setReturnedFlag: false.
@@ -922,10 +922,16 @@ EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 						self markVariableAsEscaped: aNode value.
 						^ self ].
 				aNode variable isInstanceVariable ifTrue: [
-						(self exploreInstVarUsage: aNode variable)
-							ifTrue: [ 1 halt. 
-								iVarEscapeVisitor isAccessed ifTrue: [ iVarEscapeVisitor exploreSendersOfAccessor: aNode variable name startingFrom: (self context callSiteMessage) ] ifFalse: [ self markVariableAsEscaped: aNode value ].								 ]
-							ifFalse: [ 1 halt ].
+						"(self exploreInstVarUsage: aNode variable)
+							ifTrue: [
+									iVarEscapeVisitor isAccessed
+										ifTrue: [
+												(iVarEscapeVisitor
+													 exploreSendersOfAccessor: aNode variable name
+													 startingFrom: self context callSiteMessage) ifTrue: [ "" conditions of escape are satisfied through an accessor""
+													self markVariableAsEscaped: aNode value ] ]
+										ifFalse: [ self markVariableAsEscaped: aNode value ] ]
+							ifFalse: [ 1 halt ]."
 						self markVariableAsEscaped: aNode value.
 						^ self ].
 				aNode variable isGlobalVariable ifTrue: [
@@ -966,7 +972,11 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 		' check nodes states before stacking a method to the worklist'.
 	"Treat only the arguments that are variables and the receiver"
 	nodesToTreat := { aMessageNode receiver } , aMessageNode arguments.
-	self reduceAssignments: nodesToTreat .
+	
+	aMessageNode children do: [ :node | node acceptVisitor: self ].
+	self reduceAssignments: nodesToTreat.
+	  iVarEscapeVisitor mainVisitor.
+	"
 	implementors  := self implementorsOfAstMessage: aMessageNode.
 	listOfNewTrackedVariableTables := OrderedCollection new.
 	followTheseNodes := self selectFollowedAstNodes: nodesToTreat.
@@ -986,9 +996,9 @@ EscapeAnalyzerVisitor >> visitMessageNode: aMessageNode [
 							self markVariableAsEscaped: node ] ] ]
 			ifTrue: [
 				aMessageNode selector = #value ifTrue: [
-					self markVariableAsEscaped: aMessageNode receiver ] ] ].
+					self markVariableAsEscaped: aMessageNode receiver ] ] ]."
 
-	aMessageNode children do: [ :node | node acceptVisitor: self ]
+	
 ]
 
 { #category : 'visiting' }

@@ -511,6 +511,20 @@ EscapeTest >> testNonReturnedTempVarEscapedWithDifferentArgNameThreeLevelIndirec
 ]
 
 { #category : 'field sensitivity' }
+EscapeTest >> testObjectEmbeddedInEscapingObject [
+
+	escapeAnalyzer allowedDepth: 10000.
+	escapeAnalyzer escapeAnalyze:
+		FixtureEscapeAnalysis >> #assignObjectToInstVarEscaping.
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #temp2) escapeStatus.
+	"we should propagate the escape into the containing object"
+	self assert:
+		(escapeAnalyzer findVariableByNameSymbol: #temp1) escapeStatus
+		"CArefull this only is working because the assumed return of any message is one of its tarcked arguments"
+]
+
+{ #category : 'field sensitivity' }
 EscapeTest >> testObjectEmbeddedInNonEscapingObject [
 
 	escapeAnalyzer allowedDepth: 10000.

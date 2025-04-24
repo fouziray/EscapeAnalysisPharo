@@ -69,6 +69,20 @@ FixtureEscapeAnalysis >> assignObjectToArrayConstructor [
 ]
 
 { #category : 'instVarAssignedtoNonEscapingObject' }
+FixtureEscapeAnalysis >> assignObjectToInstVarEscaping [
+
+	|temp1 temp2|
+		
+
+	temp1:= Point new.
+	temp1 setX: 1 setY: 1.
+	temp2 := Line new.
+	temp2 a: temp1.
+	^ temp2 a
+	
+]
+
+{ #category : 'instVarAssignedtoNonEscapingObject' }
 FixtureEscapeAnalysis >> assignObjectToInstVarOfNonEscapingObject [
 
 	|temp1 temp2|
