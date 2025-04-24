@@ -195,7 +195,7 @@ EscapeAnalysisContext >> trackVariable: aTrackedVariable [
 EscapeAnalysisContext >> trackVariables: aCollectionOfTrackedVariableNames [
 
 	aCollectionOfTrackedVariableNames do: [ :singleVariableName |
-		self trackVariable: singleVariableName ].
+		self trackVariable: singleVariableName asString ].
 	^ currentTrackedVars
 ]
 
