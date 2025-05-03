@@ -314,6 +314,7 @@ ObjectInlining >> lookForNonEscapingNewStatements: aMethod [
 
 	methodAssignmentNodes := aMethod ast body assignmentNodes.
 	escapeAnalyzer getNonEscapingVariables do: [ :nonEscapingNode |
+		"((escapeAnalyzer unravelLocalName: nonEscapingNode name) beginsWith: 'ooo') ifTrue: [1 halt. self addOIcandidate: ((aMethod ast body allChildren select: [ :e | e isMessage and: [ e receiver isGlobalVariable ] ])  )  ]."
 			methodAssignmentNodes do: [ :assignemntNode |
 					((assignemntNode references:
 						  (escapeAnalyzer unravelLocalName: nonEscapingNode name)) and: [

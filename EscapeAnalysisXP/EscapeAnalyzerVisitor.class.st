@@ -769,7 +769,7 @@ EscapeAnalyzerVisitor >> summaryData [
 EscapeAnalyzerVisitor >> trackLiteralVariable: aVariableNodeName [
 
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
-		^ context trackVariable: aVariableNodeName value ].
+		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName name
 ]
 
