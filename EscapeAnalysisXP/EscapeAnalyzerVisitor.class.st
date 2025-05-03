@@ -845,49 +845,60 @@ EscapeAnalyzerVisitor >> visitArrayNode: anArrayNode [
 { #category : 'visiting' }
 EscapeAnalyzerVisitor >> visitAssignmentNode: aNode [
 
-	(aNode value isVariable and:[self isTrackedNode: aNode value])
+	(aNode value isVariable and: [ self isTrackedNode: aNode value ])
 		ifFalse: [
-			self visitNode: aNode value.
-			( self isTrackedNode: aNode variable ) ifTrue: [
-				|abstractVariable|
-				abstractVariable := self findVariableByName: aNode variable.
-				
-				(aNode value isMessage
- and: [ aNode value selector = #new ] ) ifTrue: [ 
-	aNode value receiver isGlobalVariable ifTrue: [ self setTypeOf: abstractVariable as: (Smalltalk at: aNode value receiver name ifAbsent: nil). ].
-		
-		aNode value receiver isSelfOrSuperVariable ifTrue: [ self setTypeForPseudoVariable: aNode value receiver inRepresentingObject: abstractVariable ]
-	  ] ifFalse: [
-		aNode value isSelfOrSuperVariable ifTrue: [ 
-				self setTypeForPseudoVariable: aNode value inRepresentingObject: abstractVariable .
-			
-			 ]
-	].
-
-	].
-			(aNode value isBlock and: [ self isTrackedNode: aNode value ])
-				ifTrue: [
-					| variableNode |
-					(variableNode := self findVariableByName: aNode variable) ifNil: [
-						variableNode := self trackVariable: aNode variable ].
-					variableNode addReferenceToTrackedVariable:
-						(self findVariableByName: aNode value) ] ]
+				self visitNode: aNode value.
+				(self isTrackedNode: aNode variable) ifTrue: [
+						| abstractVariable |
+						abstractVariable := self findVariableByName: aNode variable.
+						(aNode value isMessage and: [ aNode value selector = #new ])
+							ifTrue: [
+									aNode value receiver isGlobalVariable ifTrue: [
+											self
+												setTypeOf: abstractVariable
+												as:
+												(Smalltalk at: aNode value receiver name ifAbsent: nil) ].
+									aNode value receiver isSelfOrSuperVariable ifTrue: [
+											self
+												setTypeForPseudoVariable: aNode value receiver
+												inRepresentingObject: abstractVariable ] ]
+							ifFalse: [
+									aNode value isSelfOrSuperVariable ifTrue: [
+											self
+												setTypeForPseudoVariable: aNode value
+												inRepresentingObject: abstractVariable ] ] ].
+				(aNode value isBlock and: [ self isTrackedNode: aNode value ])
+					ifTrue: [
+							| variableNode |
+							(variableNode := self findVariableByName: aNode variable)
+								ifNil: [ variableNode := self trackVariable: aNode variable ].
+							variableNode addReferenceToTrackedVariable:
+								(self findVariableByName: aNode value) ] ]
 		ifTrue: [
-		|abstractVariable abstractValue|
-			aNode variable isClassVariable ifTrue: [
-				self markVariableAsEscaped: aNode value.
-				^ self ].
-			aNode variable isInstanceVariable ifTrue: [
-				self markVariableAsEscaped: aNode value.
-				^ self ].
-			aNode variable isGlobalVariable ifTrue: [
-				self markVariableAsEscaped: aNode value.
-				^ self ]. 
-			abstractVariable := 	self resetThenTrackVariable: aNode variable.
+				| abstractVariable abstractValue |
+				aNode variable isClassVariable ifTrue: [
+						self markVariableAsEscaped: aNode value.
+						^ self ].
+				aNode variable isInstanceVariable ifTrue: [
+						(self exploreInstVarUsage: aNode variable)
+							ifTrue: [
+									iVarEscapeVisitor isAccessed
+										ifTrue: [
+												(iVarEscapeVisitor
+													 exploreSendersOfAccessor: aNode variable name
+													 startingFrom: self context callSiteMessage) ifTrue: [ " conditions of escape are satisfied through an accessor"
+													self markVariableAsEscaped: aNode value ] ]
+										ifFalse: [ self markVariableAsEscaped: aNode value ] ]
+							ifFalse: [ 1 halt ].
+						self markVariableAsEscaped: aNode value.
+						^ self ].
+				aNode variable isGlobalVariable ifTrue: [
+						self markVariableAsEscaped: aNode value.
+						^ self ].
+				abstractVariable := self resetThenTrackVariable: aNode variable.
 				abstractValue := self findVariableByName: aNode value.
-				abstractValue hasType ifTrue: [ self setTypeOf: abstractVariable as: (abstractValue) type . ].
- 
-			 ]
+				abstractValue hasType ifTrue: [
+					self setTypeOf: abstractVariable as: abstractValue type ] ]
 ]
 
 { #category : 'visiting' }
