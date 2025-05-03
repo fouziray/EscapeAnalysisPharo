@@ -86,9 +86,9 @@ EscapeAnalyzerVisitor >> addContext: returnStateOfMessage forImplementors: imple
 										].
 									
 									 ] ] ] ].
-		"(self isMethodTreated: implementor) ifTrue: [
+		(self isMethodTreated: implementor) ifTrue: [
 			(self retrieveHistoryOf: implementor given: newMethodArgumentsNodes)
-				ifTrue: [ ^ self ] ]."
+				ifTrue: [ ^ self ] ].
 		self extendCtxList: newMessageContext ]
 ]
 
@@ -769,6 +769,7 @@ EscapeAnalyzerVisitor >> summaryData [
 EscapeAnalyzerVisitor >> trackLiteralVariable: aVariableNodeName [
 
 	(self isTrackedNode: aVariableNodeName) ifFalse: [
+		aVariableNodeName isLiteralNode ifTrue: [ ^ context trackVariable: aVariableNodeName value  ].
 		^ context trackVariable: aVariableNodeName name ].
 	^ context findVariableByName: aVariableNodeName name
 ]
